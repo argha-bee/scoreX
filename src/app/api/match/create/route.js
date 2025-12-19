@@ -27,6 +27,7 @@ export async function POST(req) {
     const match = await Match.create({
       title,
       format,
+      totalWickets: wickets,
       overs,
       venue,
       scorer: session.user.id,

@@ -13,9 +13,12 @@ export default function CreateMatchPage() {
   const [venue, setVenue] = useState("");
   const [format, setFormat] = useState("T20");
   const [overs, setOvers] = useState(20);
+  const [wickets, setWickets] = useState(11);
   const [team1, setTeam1] = useState("");
   const [team2, setTeam2] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [date, setDate] = useState("");
 
   const createMatch = async () => {
     if (!title || !team1 || !team2 || !overs) {
@@ -31,6 +34,7 @@ export default function CreateMatchPage() {
         venue,
         format,
         overs,
+        wickets,
         team1: { name: team1, shortName: team1.slice(0, 3).toUpperCase() },
         team2: { name: team2, shortName: team2.slice(0, 3).toUpperCase() },
       });
@@ -92,30 +96,68 @@ export default function CreateMatchPage() {
           <div className={styles.col}>
             <label>Format</label>
             <select value={format} onChange={(e) => setFormat(e.target.value)}>
-              <option value="T20">T20</option>
-              <option value="ODI">ODI</option>
-              <option value="Test">Test</option>
-              <option value="Custom">Custom</option>
+              <option
+                value="T20"
+                onClick={() => {
+                  setIsCustom(false);
+                  setOvers(20);
+                }}
+              >
+                T20
+              </option>
+              <option
+                value="ODI"
+                onClick={() => {
+                  setIsCustom(false);
+                  setOvers(50);
+                }}
+              >
+                ODI
+              </option>
+              {/* <option value="Test">Test</option> */}
+              <option value="Custom" onClick={() => setIsCustom(true)}>
+                Custom
+              </option>
             </select>
           </div>
 
           <div className={styles.col}>
-            <label>Overs</label>
+            <label>Starts at</label>
             <input
-              type="number"
-              value={overs}
-              min={1}
-              max={50}
-              onChange={(e) => setOvers(Number(e.target.value))}
+              type="date"
+              value={date}
+              min={Date.now()}
+              max={Date.now() + 15}
+              onChange={(e) => setDate(Number(e.target.value))}
             />
           </div>
         </div>
+        {isCustom && (
+          <div className={styles.row}>
+            <div className={styles.col}>
+              <label>Wickets</label>
+              <input
+                type="wickets"
+                value={wickets}
+                min={1}
+                max={15}
+                onChange={(e) => setWickets(Number(e.target.value))}
+              />
+            </div>
 
-        <button
-          onClick={createMatch}
-          disabled={loading}
-          className={styles.button}
-        >
+            <div className={styles.col}>
+              <label>Overs</label>
+              <input
+                type="number"
+                value={overs}
+                min={1}
+                max={50}
+                onChange={(e) => setOvers(Number(e.target.value))}
+              />
+            </div>
+          </div>
+        )}
+        <button onClick={createMatch} disabled={loading} className={styles.button}>
           {loading ? "Creating..." : "Create Match"}
         </button>
       </div>

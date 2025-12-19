@@ -66,41 +66,30 @@
 //     res.status(500).json({ message: "Error completing toss", error: error.message });
 //   }
 // }
-
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Match from "@/models/Match";
 
 export async function POST(req, { params }) {
-  await connectDB();
-  const { id } = await params;
-
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return new Response("Unauthorized", { status: 401 });
+    await connectDB();
+    const { id } = await params;
+    const { tossWinner, decision } = await req.json();
 
     const match = await Match.findById(id);
-    if (!match) return new Response("Match not found", { status: 404 });
-
-    // Only scorer can update toss
-    if (match.scorer.toString() !== session.user.id) {
-      return new Response("Forbidden", { status: 403 });
-    }
-
-    const { tossWinner, decision } = await req.json();
+    if (!match)
+      return NextResponse.json({ success: false, message: "Match not found" }, { status: 404 });
 
     match.tossWinner = tossWinner;
     match.tossDecision = decision;
-    match.status = "ongoing"; // match starts after toss
+    match.toss = { winnerTeam: tossWinner, choice: decision };
+    match.state = "in-progress";
+
     await match.save();
 
-    return new Response(JSON.stringify({ message: "Toss updated", match }), {
-      status: 200,
-    });
+    return NextResponse.json({ success: true, message: "Toss recorded" });
   } catch (error) {
-    return new Response(JSON.stringify({ message: error.message }), {
-      status: 500,
-    });
+    console.error(error);
+    return NextResponse.json({ success: false, message: "Failed to record toss" }, { status: 500 });
   }
 }
