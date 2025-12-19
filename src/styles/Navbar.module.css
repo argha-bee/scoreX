@@ -1,0 +1,195 @@
+/* General Navbar Styles */
+.navbar {
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbarLink {
+  color: #4a4a4a;
+  font-size: 1rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.navbarLink:hover {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+/* Active Link */
+.activeLink {
+  background-color: #4f46e5; /* Blue background for active link */
+  color: #fff;
+}
+
+/* Hover effect for mobile */
+.navbarLinkMobile:hover {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+/* Navbar Content */
+.navbarContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbarLogo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4f46e5;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  position: relative;
+  transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.navbarLogo:hover {
+  transform: scale(1.1) rotate(-3deg); /* Slightly scale and rotate */
+  text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2), -4px -4px 10px rgba(255, 255, 255, 0.2);
+  animation: wave 1.5s ease-in-out infinite; /* Add animation for the curly effect */
+}
+
+/* Keyframes for curly animation */
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.spanX {
+  font-size: 35px;
+  font-weight: 900;
+  font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+  color: rgb(121, 15, 170);
+  text-shadow: #4a4a4a;
+  text-decoration: overline;
+}
+
+.navbarToggle {
+  display: block;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.navbarIcon {
+  width: 2rem;
+  height: 2rem;
+  stroke: #4f46e5;
+  transition: transform 0.3s ease;
+}
+
+.navbarIconOpen {
+  transform: rotate(45deg);
+}
+
+.navbarLinkActive {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+.navbarMobileMenu {
+  background-color: #fff;
+  padding: 1rem;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  position: absolute;
+  width: 100%;
+  top: 60px;
+  left: 0;
+}
+
+.navbarMobileLink {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  transition: background-color 0.3s ease;
+}
+
+.navbarMobileLink:hover {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+.navbarUser {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #4f46e5;
+}
+
+.navbarUserName {
+  font-weight: 600;
+}
+
+/* Transition for mobile menu */
+.navbarMobileMenu.open {
+  display: block;
+}
+
+/* Mobile Display */
+@media (min-width: 768px) {
+  .navbarToggle {
+    display: none;
+  }
+
+  .navbarMobileMenu {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbarLink {
+    display: none;
+  }
+}
+
+
+
+.authForm input {
+  width: 100%; /* Make input full width */
+  padding: 12px 45px 12px 12px; /* add right padding for icon */
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.passwordWrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.togglePassword {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
+  padding: 0;
+}
+
+.togglePassword:hover {
+  color: #000;
+}
