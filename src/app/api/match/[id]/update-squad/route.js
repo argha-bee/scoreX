@@ -9,7 +9,7 @@ export async function POST(req, { params }) {
     await connectDB();
 
     const { id } = await params;
-    const teams = await req.json(); // [{ _id, players, captain, wicketKeeper }, ...]
+    const teams = await req.json(); // returning the whole team object thats getting from the frontend payload
 
     console.log("teams at update-squad ===> \n", teams);
     if (!teams) {
@@ -19,12 +19,10 @@ export async function POST(req, { params }) {
       );
     }
 
-    
-
     const match = await Match.findById(id).populate("teams");
     // console.log(match);
 
-    const team1 = match.teams.find()
+    const team1 = match.teams.find();
     if (!match)
       return NextResponse.json({ success: false, message: "Match not found" }, { status: 404 });
 
