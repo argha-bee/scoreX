@@ -1,87 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
-import Swal from "sweetalert2";
-import styles from "@/styles/TossModal.module.css";
+import styles from "@/styles/Dashboard.module.css";
 
-export default function TossModal({ match, onTossComplete, onClose }) {
-  const [winnerTeam, setWinnerTeam] = useState("");
-  const [choice, setChoice] = useState("bat");
-  const [loading, setLoading] = useState(false);
+export default function TossModal({ match, onClose, onSubmit }) {
+  const [tossWinner, setTossWinner] = useState("");
+  const [decision, setDecision] = useState("");
 
-  const startToss = async () => {
-    if (!winnerTeam || !choice) {
-      Swal.fire("Error", "Please select team and choice", "error");
+
+  const handleSubmit = () => {
+    if (!tossWinner || !decision) {
+      alert("Select toss winner and decision");
       return;
     }
-
-    setLoading(true);
-    try {
-      const res = await axios.post(`/api/match/${match._id}/toss`, {
-        winnerTeamId: winnerTeam,
-        choice,
-      });
-
-      Swal.fire("Success", "Toss completed!", "success");
-      onTossComplete(res.data.match); // update parent state
-    } catch (err) {
-      Swal.fire("Error", err.response?.data?.message || "Failed to start toss", "error");
-    } finally {
-      setLoading(false);
-    }
+    onSubmit(tossWinner, decision);
   };
 
   return (
-    <div className={styles.modalOverlay}>
+    <div className={styles.modal}>
       <div className={styles.modalContent}>
-        <button className={styles.closeBtn} onClick={onClose}>
-          &times;
-        </button>
-        <h2 className={styles.title}>Start Toss</h2>
-
-        <label className={styles.label}>
-          Select Toss Winner:
-          <select
-            value={winnerTeam}
-            onChange={(e) => setWinnerTeam(e.target.value)}
-            className={styles.select}
-          >
+        <h2>Start Toss</h2>
+        <label>
+          Winner:
+          <select value={tossWinner} onChange={(e) => setTossWinner(e.target.value)}>
             <option value="">Select Team</option>
-            {match.teams.map((team) => (
-              <option key={team._id} value={team._id}>
-                {team.name}
+            {match.teams.map((t) => (
+              <option key={t._id} value={t._id}>
+                {t.name}
               </option>
             ))}
           </select>
         </label>
-
-        <div className={styles.choiceContainer}>
-          <label>
-            <input
-              type="radio"
-              name="choice"
-              value="bat"
-              checked={choice === "bat"}
-              onChange={() => setChoice("bat")}
-            />
-            Bat
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="choice"
-              value="bowl"
-              checked={choice === "bowl"}
-              onChange={() => setChoice("bowl")}
-            />
-            Bowl
-          </label>
+        <label style={{ marginLeft: "1rem" }}>
+          Decision:
+          <select value={decision} onChange={(e) => setDecision(e.target.value)}>
+            <option value="">Select</option>
+            <option value="bat">Bat First</option>
+            <option value="bowl">Bowl First</option>
+          </select>
+        </label>
+        <div style={{ textAlign: "right", marginTop: "1rem" }}>
+          <button className={styles.button} onClick={handleSubmit}>
+            Submit
+          </button>
+          <button className={styles.button} onClick={onClose}>
+            Cancel
+          </button>
         </div>
-
-        <button className={styles.startBtn} onClick={startToss} disabled={loading}>
-          {loading ? "Starting..." : "Start Toss"}
-        </button>
       </div>
     </div>
   );

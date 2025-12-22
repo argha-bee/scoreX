@@ -1,3 +1,5 @@
+// api/match/[id]/score/update
+
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import connectDB from "@/lib/mongodb";

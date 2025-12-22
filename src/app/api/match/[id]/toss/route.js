@@ -83,7 +83,7 @@ export async function POST(req, { params }) {
     match.tossWinner = tossWinner;
     match.tossDecision = decision;
     match.toss = { winnerTeam: tossWinner, choice: decision };
-    match.state = "in-progress";
+    match.state = "toss";
 
     await match.save();
 

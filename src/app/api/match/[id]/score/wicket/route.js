@@ -1,3 +1,4 @@
+// api/match/[id]/score/wicket
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]";
 import connectDB from "@/lib/mongodb";

@@ -4,8 +4,12 @@ const PlayerSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Player name is required"],
+      required: [true, "Player name is required."],
       trim: true,
+    },
+    jerseyNumber: {
+      type: Number,
+      required: [true, "Player kit number is required."],
     },
     team: {
       type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +20,17 @@ const PlayerSchema = new mongoose.Schema(
       type: String,
       enum: ["batsman", "bowler", "all-rounder", "wicket-keeper"],
       required: true,
+    },
+
+    battingStyle: {
+      type: String,
+      enum: ["right-hand", "left-hand"],
+    },
+
+    bowlingStyle: {
+      type: String,
+      enum: ["right-arm", "left-arm", "none"],
+      default: "none",
     },
     battingStats: {
       runs: { type: Number, default: 0 },
@@ -74,6 +89,12 @@ const PlayerSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+);
+
+// 🔥 UNIQUE constraint
+PlayerSchema.index(
+  { name: 1, jerseyNumber: 1, team: 1 },
+  { unique: true }
 );
 
 // Calculate strike rate

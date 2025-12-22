@@ -1,4 +1,4 @@
-.dashboardContainer {
+/* .dashboardContainer {
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
@@ -132,4 +132,58 @@
   border-radius: 5px;
   margin-top: 0.5rem;
   cursor: pointer;
+} */
+
+.squadContainer {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.teamColumn {
+  flex: 1;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.teamHeader {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.5rem;
+  color: #333;
+}
+
+.playerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.playerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.playerName {
+  font-weight: 500;
+}
+
+.playerAnnotations {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.roleIcons {
+  display: flex;
+  gap: 0.3rem;
+  font-size: 1.2rem;
 }

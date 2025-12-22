@@ -95,29 +95,22 @@ export default function CreateMatchPage() {
         <div className={styles.row}>
           <div className={styles.col}>
             <label>Format</label>
-            <select value={format} onChange={(e) => setFormat(e.target.value)}>
-              <option
-                value="T20"
-                onClick={() => {
+            <select
+              value={format}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFormat(val);
+                if (val === "Custom") {
+                  setIsCustom(true);
+                } else {
                   setIsCustom(false);
-                  setOvers(20);
-                }}
-              >
-                T20
-              </option>
-              <option
-                value="ODI"
-                onClick={() => {
-                  setIsCustom(false);
-                  setOvers(50);
-                }}
-              >
-                ODI
-              </option>
-              {/* <option value="Test">Test</option> */}
-              <option value="Custom" onClick={() => setIsCustom(true)}>
-                Custom
-              </option>
+                  setOvers(val === "T20" ? 20 : 50); // set default overs for T20/ODI
+                }
+              }}
+            >
+              <option value="T20">T20</option>
+              <option value="ODI">ODI</option>
+              <option value="Custom">Custom</option>
             </select>
           </div>
 

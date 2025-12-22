@@ -15,9 +15,9 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { title, format, overs, venue, team1, team2 } = body;
+    const { title, format, overs, venue, team1, team2, wickets } = body;
 
-    if (!title || !team1 || !team2 || !overs) {
+    if (!title || !team1 || !team2 || !overs || !wickets) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 

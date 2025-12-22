@@ -1,262 +1,276 @@
-// "use client";
-
-// import { useState } from "react";
-// import axios from "axios";
-// import Swal from "sweetalert2";
-// import styles from "@/styles/TossModal.module.css";
-
-// export default function SquadModal({ match, onClose, onSave }) {
-//   const [teams, setTeams] = useState(
-//     match.teams.map((t) => ({
-//       _id: t._id,
-//       name: t.name,
-//       players: t.players?.map((p) => p.name) || Array(11).fill(""),
-//       captain: t.captain?.name || "",
-//       wicketKeeper: t.wicketKeeper?.name || "",
-//     }))
-//   );
-//   const [loading, setLoading] = useState(false);
-
-//   const handlePlayerChange = (teamIndex, playerIndex, value) => {
-//     const newTeams = [...teams];
-//     newTeams[teamIndex].players[playerIndex] = value;
-//     setTeams(newTeams);
-//   };
-
-//   const addPlayer = (teamIndex) => {
-//     const newTeams = [...teams];
-//     newTeams[teamIndex].players.push("");
-//     setTeams(newTeams);
-//   };
-
-//   const handleSave = async () => {
-//     // Validation
-//     for (let t of teams) {
-//       if (!t.captain || !t.players.includes(t.captain)) {
-//         Swal.fire("Error", `Select a valid captain for ${t.name}`, "error");
-//         return;
-//       }
-//       if (!t.wicketKeeper || !t.players.includes(t.wicketKeeper)) {
-//         Swal.fire("Error", `Select a valid wicket-keeper for ${t.name}`, "error");
-//         return;
-//       }
-//       if (t.players.length < 11) {
-//         Swal.fire("Error", `${t.name} must have 11 players`, "error");
-//         return;
-//       }
-//     }
-
-//     setLoading(true);
-//     try {
-//       const res = await axios.post(`/api/match/${match._id}/update-squad`, { teams });
-//       if (res.data.success) {
-//         Swal.fire("Success", "Squads updated!", "success");
-//         onSave(res.data.match);
-//         onClose();
-//       } else {
-//         Swal.fire("Error", res.data.message, "error");
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       Swal.fire("Error", "Failed to update squads", "error");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className={styles.modalOverlay}>
-//       <div className={styles.modalContent}>
-//         <button className={styles.closeBtn} onClick={onClose}>
-//           &times;
-//         </button>
-//         <h2 className={styles.title}>Declare / Update Squads</h2>
-
-//         {teams.map((team, ti) => (
-//           <div key={ti} style={{ marginBottom: "1rem" }}>
-//             <h3>{team.name}</h3>
-//             {team.players.map((player, pi) => (
-//               <input
-//                 key={pi}
-//                 placeholder={`Player ${pi + 1}`}
-//                 value={player}
-//                 onChange={(e) => handlePlayerChange(ti, pi, e.target.value)}
-//                 style={{ display: "block", width: "100%", margin: "0.3rem 0", padding: "0.5rem" }}
-//               />
-//             ))}
-//             <button onClick={() => addPlayer(ti)} style={{ marginBottom: "0.5rem" }}>
-//               Add Player
-//             </button>
-
-//             <div>
-//               <label>
-//                 Captain:
-//                 <select
-//                   value={team.captain}
-//                   onChange={(e) => {
-//                     const newTeams = [...teams];
-//                     newTeams[ti].captain = e.target.value;
-//                     setTeams(newTeams);
-//                   }}
-//                 >
-//                   <option value="">Select</option>
-//                   {team.players.map((p, i) => (
-//                     <option key={i} value={p}>
-//                       {p}
-//                     </option>
-//                   ))}
-//                 </select>
-//               </label>
-//               <label style={{ marginLeft: "1rem" }}>
-//                 Wicket-Keeper:
-//                 <select
-//                   value={team.wicketKeeper}
-//                   onChange={(e) => {
-//                     const newTeams = [...teams];
-//                     newTeams[ti].wicketKeeper = e.target.value;
-//                     setTeams(newTeams);
-//                   }}
-//                 >
-//                   <option value="">Select</option>
-//                   {team.players.map((p, i) => (
-//                     <option key={i} value={p}>
-//                       {p}
-//                     </option>
-//                   ))}
-//                 </select>
-//               </label>
-//             </div>
-//           </div>
-//         ))}
-
-//         <button
-//           onClick={handleSave}
-//           disabled={loading}
-//           style={{ marginTop: "1rem", padding: "0.5rem 1rem" }}
-//         >
-//           {loading ? "Saving..." : "Save Squad"}
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import styles from "@/styles/Dashboard.module.css";
-import Team from "@/models/Team";
+import styles from "@/styles/SquadModal.module.css";
 
-export default function SquadModal({ match, onClose, onSave }) {
+const emptyPlayer = {
+  name: "",
+  jerseyNumber: "",
+  role: "",
+  battingStyle: "right-hand", // default to avoid empty
+  bowlingStyle: "none", // default to avoid enum validation errors
+};
+
+export default function SquadModal({ match, onClose, onSave, isDeclare }) {
+  const maxPlayers = match.totalWickets + 1;
+
   const [teams, setTeams] = useState(
     match.teams.map((t) => ({
       _id: t._id,
       name: t.name,
-      players: t.players?.map((p) => p.name) || Array(11).fill(""),
-      captain: t.captain?.name || "",
-      wicketKeeper: t.wicketKeeper?.name || "",
+      players:
+        t.players && t.players.length > 0
+          ? t.players.map((p) => ({
+              ...p,
+              battingStyle: p.battingStyle || "right-hand",
+              bowlingStyle: p.bowlingStyle || "none",
+            }))
+          : [{ ...emptyPlayer }],
+      captain: t.captain || "",
+      wicketKeeper: t.wicketKeeper || "",
     }))
   );
 
-
-
   const [loading, setLoading] = useState(false);
 
-  const handlePlayerChange = (teamIndex, playerIndex, value) => {
-    const newTeams = [...teams];
-    newTeams[teamIndex].players[playerIndex] = value;
-    setTeams(newTeams);
+  const updatePlayer = (ti, pi, field, value) => {
+    setTeams((prev) => {
+      const updated = [...prev];
+      updated[ti].players[pi][field] = value;
+      return updated;
+    });
   };
 
-
-  const handleSave = async () => {
-    for (let t of teams) {
-      if (!t.captain || !t.players.includes(t.captain)) {
-        alert(`Select a valid captain for ${t.name}`);
-        return;
+  const addPlayer = (ti) => {
+    setTeams((prev) => {
+      const updated = [...prev];
+      if (updated[ti].players.length >= maxPlayers) {
+        alert(`Maximum ${maxPlayers} players allowed`);
+        return prev;
       }
-      if (!t.wicketKeeper || !t.players.includes(t.wicketKeeper)) {
-        alert(`Select a valid wicket-keeper for ${t.name}`);
-        return;
+      updated[ti].players.push({ ...emptyPlayer });
+      return updated;
+    });
+  };
+
+  const removePlayer = (ti, pi) => {
+    setTeams((prev) => {
+      const updated = [...prev];
+      updated[ti].players.splice(pi, 1);
+      return updated;
+    });
+  };
+
+  const validateTeams = () => {
+    for (const team of teams) {
+      if (team.players.length !== maxPlayers) {
+        alert(`${team.name} must have exactly ${maxPlayers} players`);
+        return false;
+      }
+
+      const seen = new Set();
+
+      for (const p of team.players) {
+        if (!p.name || !p.jerseyNumber || !p.role) {
+          alert(`All player fields are required in ${team.name}`);
+          return false;
+        }
+
+        if (
+          (p.role === "batsman" || p.role === "wicket-keeper" || p.role === "all-rounder") &&
+          !p.battingStyle
+        ) {
+          alert(`Batting style required for ${p.name}`);
+          return false;
+        }
+
+        if ((p.role === "bowler" || p.role === "all-rounder") && !p.bowlingStyle) {
+          alert(`Bowling style required for ${p.name}`);
+          return false;
+        }
+
+        const key = `${p.name.toLowerCase()}-${p.jerseyNumber}`;
+        if (seen.has(key)) {
+          alert(`Duplicate player: ${p.name} (#${p.jerseyNumber})`);
+          return false;
+        }
+        seen.add(key);
+      }
+
+      if (!team.captain || !team.players.find((p) => p.name === team.captain)) {
+        alert(`Select a valid captain for ${team.name}`);
+        return false;
+      }
+
+      if (!team.wicketKeeper || !team.players.find((p) => p.name === team.wicketKeeper)) {
+        alert(`Select a valid wicket-keeper for ${team.name}`);
+        return false;
       }
     }
 
+    return true;
+  };
+
+  // const handleSave = async () => {
+  //   if (!validateTeams()) return;
+
+  //   setLoading(true);
+  //   try {
+  //     const res = await axios.post(
+  //       `/api/match/${match._id}/squads`,
+  //       { teams },
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+
+  //     if (res.data.success) {
+  //       onSave(res.data.match);
+  //       onClose();
+  //     } else {
+  //       alert(res.data.message || "Failed to save squad");
+  //     }
+  //   } catch (err) {
+  //     console.error("Axios error:", err.response?.data || err.message);
+  //     alert(err.response?.data?.message || "Failed to save squad");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const handleSave = async () => {
+    if (!validateTeams()) return;
+
     setLoading(true);
     try {
-      await axios.post(
-        `/api/match/${match._id}/update-squad`,
-        { teams },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const method = isDeclare ? "post" : "put"; // POST = declare, PUT = update
+      const res = await axios({
+        url: `/api/match/${match._id}/squads`,
+        method,
+        data: { teams },
+        headers: { "Content-Type": "application/json" },
+      });
 
-      if (res.data.success) onSave();
+      if (res.data.success) {
+        onSave(res.data.match);
+        onClose();
+      } else {
+        alert(res.data.message || "Failed to save squad");
+      }
     } catch (err) {
-      console.error(err);
-      alert("Failed to save squad");
+      console.error("Axios error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Failed to save squad");
     } finally {
       setLoading(false);
-      onClose();
     }
   };
 
   return (
     <div className={styles.modal}>
       <div className={styles.modalContent}>
-        <h2>Declare / Update Squad</h2>
+        <h2>{isDeclare ? "Declare" : "Update"} Squads</h2>
+
         {teams.map((team, ti) => (
-          <div key={team._id} style={{ marginBottom: "1rem" }}>
-            <h3>{team.name}</h3>
-            {team.players.map((p, pi) => (
-              <input
-                key={pi}
-                value={p}
-                placeholder={`Player ${pi + 1}`}
-                onChange={(e) => handlePlayerChange(ti, pi, e.target.value)}
-              />
+          <div key={team._id} className={styles.teamBlock}>
+            <h3>
+              {team.name} ({team.players.length}/{maxPlayers})
+            </h3>
+
+            {team.players.map((player, pi) => (
+              <div key={pi} className={styles.playerRow}>
+                <strong>Player {pi + 1}</strong>
+
+                <input
+                  placeholder="Player Name"
+                  value={player.name}
+                  onChange={(e) => updatePlayer(ti, pi, "name", e.target.value)}
+                />
+
+                <input
+                  placeholder="Jersey #"
+                  type="number"
+                  value={player.jerseyNumber}
+                  onChange={(e) => updatePlayer(ti, pi, "jerseyNumber", e.target.value)}
+                />
+
+                <select
+                  value={player.role}
+                  onChange={(e) => updatePlayer(ti, pi, "role", e.target.value)}
+                >
+                  <option value="">Role</option>
+                  <option value="batsman">Batsman</option>
+                  <option value="bowler">Bowler</option>
+                  <option value="all-rounder">All-rounder</option>
+                  <option value="wicket-keeper">Wicket-keeper</option>
+                </select>
+
+                {player.role && (
+                  <select
+                    value={player.battingStyle}
+                    onChange={(e) => updatePlayer(ti, pi, "battingStyle", e.target.value)}
+                  >
+                    <option value="">Batting Style</option>
+                    <option value="right-hand">Right-hand</option>
+                    <option value="left-hand">Left-hand</option>
+                  </select>
+                )}
+
+                {(player.role === "bowler" || player.role === "all-rounder") && (
+                  <select
+                    value={player.bowlingStyle}
+                    onChange={(e) => updatePlayer(ti, pi, "bowlingStyle", e.target.value)}
+                  >
+                    <option value="">Bowling Style</option>
+                    <option value="right-arm">Right-arm</option>
+                    <option value="left-arm">Left-arm</option>
+                    <option value="none">None</option>
+                  </select>
+                )}
+
+                {team.players.length > 1 && (
+                  <button className={styles.removeButton} onClick={() => removePlayer(ti, pi)}>
+                    Remove Player
+                  </button>
+                )}
+              </div>
             ))}
 
-            <div style={{ marginTop: "0.5rem" }}>
+            <button className={styles.addButton} onClick={() => addPlayer(ti)}>
+              + Add Player
+            </button>
+
+            <div className={styles.teamRoles}>
               <label>
-                Captain:
+                Captain
                 <select
                   value={team.captain}
-                  onChange={(e) =>
-                    setTeams([
-                      ...teams.slice(0, ti),
-                      { ...team, captain: e.target.value },
-                      ...teams.slice(ti + 1),
-                    ])
-                  }
+                  onChange={(e) => {
+                    const updated = [...teams];
+                    updated[ti].captain = e.target.value;
+                    setTeams(updated);
+                  }}
                 >
                   <option value="">Select</option>
                   {team.players.map((p, i) => (
-                    <option key={i} value={p}>
-                      {p}
+                    <option key={i} value={p.name}>
+                      {p.name}
                     </option>
                   ))}
                 </select>
               </label>
-              <label style={{ marginLeft: "1rem" }}>
-                Wicket-Keeper:
+
+              <label>
+                Wicket-Keeper
                 <select
                   value={team.wicketKeeper}
-                  onChange={(e) =>
-                    setTeams([
-                      ...teams.slice(0, ti),
-                      { ...team, wicketKeeper: e.target.value },
-                      ...teams.slice(ti + 1),
-                    ])
-                  }
+                  onChange={(e) => {
+                    const updated = [...teams];
+                    updated[ti].wicketKeeper = e.target.value;
+                    setTeams(updated);
+                  }}
                 >
                   <option value="">Select</option>
                   {team.players.map((p, i) => (
-                    <option key={i} value={p}>
-                      {p}
+                    <option key={i} value={p.name}>
+                      {p.name}
                     </option>
                   ))}
                 </select>
@@ -265,11 +279,11 @@ export default function SquadModal({ match, onClose, onSave }) {
           </div>
         ))}
 
-        <div style={{ marginTop: "1rem" }}>
-          <button onClick={handleSave} disabled={loading}>
+        <div className={styles.actions}>
+          <button className={styles.saveButton} onClick={handleSave} disabled={loading}>
             {loading ? "Saving..." : "Save Squad"}
           </button>
-          <button onClick={onClose} style={{ marginLeft: "1rem" }}>
+          <button className={styles.cancelButton} onClick={onClose}>
             Cancel
           </button>
         </div>
