@@ -26,8 +26,17 @@ const MatchSchema = new mongoose.Schema(
 
     state: {
       type: String,
-      enum: ["scheduled", "toss", "in-progress", "1st-innings", "2nd-innings","innings-break", "finished", "abandoned"],
-      default: "setup",
+      enum: [
+        "scheduled",
+        "toss",
+        "in-progress",
+        "1st-innings",
+        "2nd-innings",
+        "innings-break",
+        "finished",
+        "abandoned",
+      ],
+      default: "scheduled",
     },
 
     tossWinner: {

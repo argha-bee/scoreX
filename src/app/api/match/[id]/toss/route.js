@@ -69,6 +69,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Match from "@/models/Match";
+import Score from "@/models/Score";
 
 export async function POST(req, { params }) {
   try {
@@ -85,7 +86,21 @@ export async function POST(req, { params }) {
     match.toss = { winnerTeam: tossWinner, choice: decision };
     match.state = "toss";
 
+    const winnerId = tossWinner.toString();
+
+    // Identify the loser correctly using .equals()
+    const tossLoser = match.teams[0].equals(winnerId) ? match.teams[1] : match.teams[0];
+    // const tossLoser = match.teams[0] === tossWinner ? match.teams[1] : match.teams[0];
+
     await match.save();
+
+    // set batting and bowling teams at the beginning of the match
+    const matchScore = await Score.findOne({ match: id, innings: 1 });
+    if (matchScore) {
+      matchScore.battingTeam = decision === "bat" ? tossWinner : tossLoser;
+      matchScore.bowlingTeam = decision === "bat" ? tossLoser : tossWinner;
+      await matchScore.save();
+    }
 
     return NextResponse.json({ success: true, message: "Toss recorded" });
   } catch (error) {

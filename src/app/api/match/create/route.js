@@ -30,8 +30,9 @@ export async function POST(req) {
       totalWickets: wickets,
       overs,
       venue,
+      state: "scheduled",
       scorer: session.user.id,
-      status: "setup",
+      status: "scheduled",
     });
 
     // 2️⃣ Create teams

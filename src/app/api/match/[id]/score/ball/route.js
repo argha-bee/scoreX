@@ -1,6 +1,6 @@
 // api/match/[id]/score/ball
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // ✅ fixed path
 import connectDB from "@/lib/mongodb";
 import Score from "@/models/Score";
 import Match from "@/models/Match";
