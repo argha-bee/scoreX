@@ -94,12 +94,11 @@ export default function MatchPage() {
     }
   };
 
-  // Navigation
+
   const updateScores = () => router.push(`/dashboard/match/${id}/update-score`);
   const liveScores = () => router.push(`/dashboard/match/${id}/live-score`);
   const viewSummary = () => router.push(`/dashboard/match/${id}/summary`);
 
-  // Render action buttons based on match state
   const renderActionButtons = () => {
     if (match.state === "scheduled" || "ready-to-start") {
       return (
