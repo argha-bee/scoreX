@@ -94,13 +94,12 @@ export default function MatchPage() {
     }
   };
 
-
   const updateScores = () => router.push(`/dashboard/match/${id}/update-score`);
   const liveScores = () => router.push(`/dashboard/match/${id}/live-score`);
   const viewSummary = () => router.push(`/dashboard/match/${id}/summary`);
 
   const renderActionButtons = () => {
-    if (match.state === "scheduled" || "ready-to-start") {
+    if (match.state === "scheduled") {
       return (
         <>
           <button onClick={() => setShowSquadModal(true)} className={styles.btn}>
