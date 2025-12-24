@@ -222,7 +222,7 @@ async function handleSquads(req, params, isUpdate) {
     // 🚦 If both teams ready → move match state
     const allReady = match.teams.every((t) => t.ready);
     if (allReady && match.state === "scheduled") {
-      match.state = "toss";
+      match.state = "ready-to-start";
       await match.save();
     }
 

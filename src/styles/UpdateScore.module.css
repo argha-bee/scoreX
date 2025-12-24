@@ -1,463 +1,518 @@
+/* /styles/UpdateScore.module.css */
 .container {
-  padding: 15px;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  font-family: "Segoe UI", Roboto, sans-serif;
-  background-color: #f8fafc;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   min-height: 100vh;
 }
 
-.headerCard {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+.loader,
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  font-size: 1.25rem;
   color: white;
-  padding: 25px;
-  border-radius: 20px;
+}
+
+.headerCard {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  margin-bottom: 20px;
+  color: white;
+}
+
+.inningsLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.teamRow {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.battingTeamName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #60a5fa;
+}
+
+.vs {
+  opacity: 0.7;
+  font-size: 1rem;
 }
 
 .mainScore {
   font-size: 3.5rem;
   font-weight: 800;
-  margin: 10px 0;
-  letter-spacing: -1px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.oversText {
+  font-size: 1.25rem;
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.targetInfo {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .statsBar {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #94a3b8;
+  gap: 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.playerGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.card {
-  background: white;
-  padding: 15px;
-  border-radius: 15px;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.onStrikeCard {
-  border-color: #fbbf24;
-  background: #fffbeb;
-}
-
-.bowlerCard {
-  grid-column: span 2;
-  background: #e2e8f0;
-  padding: 12px 20px;
+.bowlerStatusCard {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
   border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.bowlerFlex {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.label {
-  font-size: 0.7rem;
+.bowlerIdentity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: white;
+}
+
+.bowlerIdentity strong {
+  font-size: 1.1rem;
+}
+
+.bowlerIdentity small {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.bowlerMatchStats {
+  color: #3b82f6;
   font-weight: 700;
-  color: #64748b;
-  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.ballTimeline {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ballCircle {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.ballCircle:hover {
+  transform: scale(1.1);
+}
+
+.wicketBall {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #b91c1c;
+  animation: pulse 1s ease-in-out;
+}
+
+.fourBall {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+}
+
+.sixBall {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  border-color: #7e22ce;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.setupBar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.setupBtn {
+  flex: 1;
+  min-width: 150px;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  color: white;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.setupBtn:hover {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .controlPanel {
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .buttonGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
 }
 
 .btn {
-  aspect-ratio: 1;
+  padding: 1.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
   border: none;
   border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.extraBtn {
+  padding: 1.25rem;
   font-size: 1.25rem;
   font-weight: 700;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.1s;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
-.btn:active {
-  transform: scale(0.9);
+.extraBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
 }
 
-.runBtn {
-  background: #f1f5f9;
-  color: #1e293b;
-}
-.boundaryBtn {
-  background: #10b981;
-  color: white;
-}
-.extraBtn {
-  background: #f59e0b;
-  color: white;
-}
 .wicketBtn {
-  background: #ef4444;
+  padding: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  grid-column: span 2;
-  aspect-ratio: auto;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.wicketBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.postGameActions {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.primaryBtn {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+}
+
+.primaryBtn:hover {
+  background: linear-gradient(90deg, #16a34a, #15803d);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.historySection {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.divider {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.summaryLine {
+  text-align: center;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
 .overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal {
-  background: white;
-  width: 90%;
-  max-width: 400px;
-  border-radius: 24px;
-  padding: 24px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.playerList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.selectBtn {
-  padding: 16px;
-  text-align: left;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  background: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.selectBtn:hover {
-  background: #f1f5f9;
-}
-
-/* Live Scorecard Tables */
-.tableContainer {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.tableHeader {
-  background: #f1f5f9;
-  padding: 10px 15px;
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 1fr;
-  font-weight: 700;
-  font-size: 0.8rem;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.tableRow {
-  padding: 12px 15px;
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 1fr;
-  align-items: center;
-  border-bottom: 1px solid #f1f5f9;
-  font-size: 0.95rem;
-}
-
-.strikerRow {
-  background: #fffbeb;
-}
-.onStrikeIcon {
-  color: #fbbf24;
-  margin-left: 5px;
-}
-
-.statValue {
-  text-align: center;
-  font-family: "Courier New", monospace;
-}
-
-/* Setup Bar */
-.setupBar {
-  background: #fff;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 10px;
-  border-left: 5px solid #3b82f6;
-}
-
-.setupBtn {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px dashed #3b82f6;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-/* ############################################################
-################# UPDATES ##################################
-############################################################ */
-
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 10px;
-  background: #f8fafc;
-  min-height: 100vh;
-}
-
-.headerCard {
-  background: #0f172a;
-  color: white;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  margin-bottom: 12px;
-}
-.mainScore {
-  font-size: 2.2rem;
-  font-weight: 800;
-}
-.oversText {
-  font-size: 1.1rem;
-  color: #94a3b8;
-}
-.statsBar {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #cbd5e1;
-}
-
-.timelineCard {
-  display: flex;
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-.ballList {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-.ballCircle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  border: 1px solid #e2e8f0;
-}
-.wicketBall {
-  background: #ef4444;
-  color: white;
-  border-color: #dc2626;
-}
-.boundaryBall {
-  border: 2px solid #10b981;
-  color: #065f46;
-}
-
-.setupBar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.setupBtn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.missing {
-  border: 2px dashed #ef4444;
-  color: #ef4444;
-}
-
-.tableContainer {
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-.tableHeader {
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 1fr;
-  padding: 8px 12px;
-  background: #f8fafc;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  border-bottom: 1px solid #f1f5f9;
-}
-.tableRow {
-  display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr 1fr 1fr;
-  padding: 10px 12px;
-  font-size: 0.85rem;
-  border-bottom: 1px solid #f8fafc;
-}
-.strikerRow {
-  background: #fffbeb;
-  font-weight: 600;
-}
-.activeRow {
-  border-left: 4px solid #10b981;
-  background: #f0fdf4;
-}
-.statValue {
-  text-align: center;
-}
-
-.buttonGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.btn {
-  padding: 15px 0;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-.runBtn {
-  background: #e2e8f0;
-}
-.extraBtn {
-  background: #fbbf24;
-  color: #78350f;
-}
-.wicketBtn {
-  background: #ef4444;
-  color: white;
-  grid-column: span 2;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-.modal {
-  background: white;
-  width: 90%;
-  max-width: 400px;
-  padding: 20px;
-  border-radius: 12px;
-}
-.selectBtn {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  max-width: 500px;
   width: 100%;
-  padding: 12px;
-  margin-bottom: 8px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  text-align: left;
-  background: white;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: modalSlide 0.3s ease;
+  border: 2px solid rgba(59, 130, 246, 0.3);
 }
 
-.inningsLabel {
-  font-size: 0.7rem;
-  letter-spacing: 2px;
-  color: #94a3b8;
-  margin-bottom: 5px;
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.targetBox {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 5px 10px;
-  border-radius: 4px;
-  margin: 10px 0;
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-.bowlerStatusCard {
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  border-left: 5px solid #3b82f6;
-}
-.timeline {
-  display: flex;
-  gap: 5px;
-  margin-top: 10px;
-}
-.ballDot {
-  background: #f1f5f9;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  border: 1px solid #e2e8f0;
-}
-.historySection {
-  margin-top: 40px;
-  opacity: 0.8;
-}
-.divider {
+
+.modal h3 {
+  color: white;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
   text-align: center;
-  border-bottom: 1px dashed #cbd5e1;
-  line-height: 0.1em;
-  margin: 20px 0;
-  color: #64748b;
-  font-size: 0.7rem;
-  font-weight: bold;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.timelineList {
+.modal label {
+  display: block;
+  margin-bottom: 1.5rem;
+  color: white;
+  font-weight: 600;
+}
+
+.modal select {
+  width: 100%;
+  padding: 0.875rem;
+  margin-top: 0.5rem;
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.extraRunsButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.extraRunBtn {
+  padding: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.extraRunBtn:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  border-color: #3b82f6;
+  transform: scale(1.05);
+}
+
+.extraRunBtn.selected {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.modalActions {
   display: flex;
-  gap: 5px;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.modalActions button {
+  flex: 1;
+  padding: 0.875rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modalActions button:first-child {
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.modalActions button:first-child:hover:not(:disabled) {
+  background: linear-gradient(90deg, #16a34a, #15803d);
+  transform: scale(1.05);
+}
+
+.modalActions button:last-child {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  color: white;
+}
+
+.modalActions button:last-child:hover {
+  background: linear-gradient(90deg, #dc2626, #b91c1c);
+  transform: scale(1.05);
+}
+
+.modalActions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .mainScore {
+    font-size: 2.5rem;
+  }
+
+  .oversText {
+    font-size: 1rem;
+  }
+
+  .buttonGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .btn,
+  .extraBtn,
+  .wicketBtn {
+    padding: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .ballCircle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+
+  .modal {
+    padding: 1.5rem;
+  }
+
+  .extraRunsButtons {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

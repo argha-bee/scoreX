@@ -366,6 +366,98 @@
   margin-bottom: 1.5rem;
 }
 
+.scorecardToggle {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.toggleBtn {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.toggleBtn:hover {
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.scorecardSection {
+  margin: 2rem 0;
+}
+
+.scorecardCard {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.scorecardCard h3 {
+  color: white;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.scorecardTable {
+  overflow-x: auto;
+}
+
+.scorecardHeader {
+  display: grid;
+  grid-template-columns: 2fr repeat(5, 0.8fr);
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+}
+
+.scorecardRow {
+  display: grid;
+  grid-template-columns: 2fr repeat(5, 0.8fr);
+  gap: 0.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  transition: background 0.3s ease;
+}
+
+.scorecardRow:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.playerCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.playerName {
+  font-weight: 600;
+  color: white;
+}
+
+.dismissal {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.statCol {
+  text-align: center;
+  font-weight: 500;
+}
+
 .loader,
 .error {
   display: flex;

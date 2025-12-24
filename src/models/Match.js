@@ -35,6 +35,7 @@ const MatchSchema = new mongoose.Schema(
         "innings-break",
         "finished",
         "abandoned",
+        "ready-to-start",
       ],
       default: "scheduled",
     },

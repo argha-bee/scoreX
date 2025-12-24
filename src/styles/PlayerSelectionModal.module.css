@@ -1,0 +1,316 @@
+/* /styles/PlayerSelectionModal.module.css - SEXY VERSION */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 24px;
+  padding: 2.5rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.2);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Glowing effect */
+.modal::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b);
+  border-radius: 24px;
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(20px);
+  animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.title {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.title::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+.playerList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.playerBtn {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient background on hover */
+.playerBtn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.playerBtn:hover::before {
+  left: 100%;
+}
+
+.playerBtn:hover {
+  background: linear-gradient(135deg, #475569 0%, #334155 100%);
+  border-color: #3b82f6;
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4), inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+.playerBtn:active {
+  transform: translateX(6px) scale(0.98);
+}
+
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playerName {
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: color 0.3s ease;
+}
+
+.playerBtn:hover .playerName {
+  color: #60a5fa;
+}
+
+.playerJersey {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.playerBtn:hover .playerJersey {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.playerRole {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.playerBtn:hover .playerRole {
+  background: rgba(59, 130, 246, 0.2);
+  color: #cbd5e1;
+}
+
+.closeBtn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.closeBtn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5);
+}
+
+.closeBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.emptyState {
+  text-align: center;
+  color: #94a3b8;
+  padding: 3rem 2rem;
+  font-style: italic;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
+  border-radius: 12px;
+  border: 2px dashed rgba(148, 163, 184, 0.3);
+}
+
+/* Custom Scrollbar */
+.playerList::-webkit-scrollbar {
+  width: 10px;
+}
+
+.playerList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.playerList::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
+  border-radius: 10px;
+  border: 2px solid rgba(30, 41, 59, 1);
+}
+
+.playerList::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .modal {
+    padding: 2rem 1.5rem;
+    max-width: 95%;
+    border-radius: 20px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .playerBtn {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .playerName {
+    font-size: 1rem;
+  }
+
+  .playerJersey {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .playerRole {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .playerList {
+    max-height: 350px;
+  }
+
+  .closeBtn {
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+}
+
+/* Touch device optimization */
+@media (hover: none) and (pointer: coarse) {
+  .playerBtn:active {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    border-color: #3b82f6;
+  }
+}

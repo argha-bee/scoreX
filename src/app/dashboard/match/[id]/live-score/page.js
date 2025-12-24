@@ -1,22 +1,24 @@
-// /dashboard/match/[id]/live-score/page.js
+// /dashboard/match/[id]/live-score/page.js - FIXED
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import styles from "@/styles/LiveScore.module.css";
-import ScorecardTable from "@/components/ScorecardTable";
 
 export default function LiveScorePage() {
   const { id } = useParams();
   const [match, setMatch] = useState(null);
+  const [allPlayers, setAllPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [showScorecard, setShowScorecard] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       const res = await axios.post(`/api/match/${id}/score-update`);
       if (res.data.success) {
         setMatch(res.data.data);
+        setAllPlayers(res.data.allPlayers || []);
       }
     } catch (err) {
       console.error("Fetch error:", err);
@@ -67,19 +69,41 @@ export default function LiveScorePage() {
     target && ballsLeft > 0 ? (((target - currentScore.runs) / ballsLeft) * 6).toFixed(2) : null;
 
   // Get team names
-  const battingTeamName =
-    match.teams.find(
-      (t) =>
-        t._id?.toString() ===
-        (currentScore.battingTeam?._id || currentScore.battingTeam)?.toString()
-    )?.name || "Batting Team";
+  const battingTeam = match.teams.find(
+    (t) =>
+      t._id?.toString() === (currentScore.battingTeam?._id || currentScore.battingTeam)?.toString()
+  );
 
-  const bowlingTeamName =
-    match.teams.find(
-      (t) =>
-        t._id?.toString() ===
-        (currentScore.bowlingTeam?._id || currentScore.bowlingTeam)?.toString()
-    )?.name || "Bowling Team";
+  const bowlingTeam = match.teams.find(
+    (t) =>
+      t._id?.toString() === (currentScore.bowlingTeam?._id || currentScore.bowlingTeam)?.toString()
+  );
+
+  // Get ALL batsmen from batting team (including those who got out)
+  const getAllBatsmen = () => {
+    return allPlayers
+      .filter((p) => {
+        const playerTeamId = p.team?._id || p.team;
+        const battingTeamId = battingTeam?._id;
+        return (
+          playerTeamId?.toString() === battingTeamId?.toString() &&
+          (p.battingStats?.balls > 0 || p.battingStats?.isOut)
+        );
+      })
+      .sort((a, b) => {
+        // Sort by batting order (runs desc for simple ordering)
+        return (b.battingStats?.balls || 0) - (a.battingStats?.balls || 0);
+      });
+  };
+
+  // Get ALL bowlers who have bowled
+  const getAllBowlers = () => {
+    return allPlayers.filter((p) => {
+      const playerTeamId = p.team?._id || p.team;
+      const bowlingTeamId = bowlingTeam?._id;
+      return playerTeamId?.toString() === bowlingTeamId?.toString() && p.bowlingStats?.balls > 0;
+    });
+  };
 
   // Group balls by overs for timeline
   const groupedOvers = [];
@@ -87,6 +111,14 @@ export default function LiveScorePage() {
   for (let i = 0; i < balls.length; i += 6) {
     groupedOvers.push(balls.slice(i, i + 6));
   }
+
+  const allBatsmen = getAllBatsmen();
+  const allBowlers = getAllBowlers();
+
+  // Get current bowler details
+  const currentBowler = currentScore.bowlersPerformance?.find(
+    (b) => b.player?.toString() === currentScore.currentBowler?._id?.toString()
+  );
 
   return (
     <div className={styles.container}>
@@ -114,7 +146,7 @@ export default function LiveScorePage() {
           {match.currentInnings === 1 ? "FIRST INNINGS" : "SECOND INNINGS"}
         </div>
 
-        <div className={styles.teamName}>{battingTeamName}</div>
+        <div className={styles.teamName}>{battingTeam?.name}</div>
 
         <div className={styles.mainScore}>
           {currentScore.runs}/{currentScore.wickets}
@@ -152,7 +184,7 @@ export default function LiveScorePage() {
       </div>
 
       {/* Current Partnership */}
-      {currentScore.currentBatsmen?.length === 2 && (
+      {currentScore.currentBatsmen?.length === 2 && !currentScore.isCompleted && (
         <div className={styles.partnership}>
           <h3>Current Partnership</h3>
           <div className={styles.partnershipDetails}>
@@ -171,25 +203,28 @@ export default function LiveScorePage() {
       )}
 
       {/* Current Bowler */}
-      {currentScore.currentBowler && (
+      {currentScore.currentBowler && !currentScore.isCompleted && (
         <div className={styles.bowlerCard}>
           <h3>Current Bowler</h3>
           <div className={styles.bowlerInfo}>
             <span className={styles.bowlerName}>{currentScore.currentBowler.name}</span>
             <span className={styles.bowlerFigs}>
-              {currentScore.currentBowler.bowlingStats?.overs || 0}-
-              {currentScore.currentBowler.bowlingStats?.maidens || 0}-
-              {currentScore.currentBowler.bowlingStats?.runs || 0}-
-              {currentScore.currentBowler.bowlingStats?.wickets || 0}
+              {currentBowler?.overs || 0}.{currentBowler?.balls || 0} - {currentBowler?.runs || 0} -{" "}
+              {currentBowler?.wickets || 0}
             </span>
             <span className={styles.bowlerEcon}>
-              Econ: {currentScore.currentBowler.bowlingStats?.economy || "0.00"}
+              Econ:{" "}
+              {currentBowler && (currentBowler.overs > 0 || currentBowler.balls > 0)
+                ? (
+                    currentBowler.runs / ((currentBowler.overs * 6 + currentBowler.balls) / 6) || 0
+                  ).toFixed(2)
+                : "0.00"}
             </span>
           </div>
         </div>
       )}
 
-      {/* Over-by-Over Timeline */}
+      {/* Ball Timeline */}
       <div className={styles.timeline}>
         <h3>Recent Overs</h3>
         <div className={styles.oversContainer}>
@@ -204,7 +239,7 @@ export default function LiveScorePage() {
                     <span
                       key={ballIndex}
                       className={`${styles.ball} ${
-                        ball === "W" ? styles.wicket : ball.includes("W") ? styles.extraWicket : ""
+                        ball === "W" || ball.includes("W") ? styles.wicket : ""
                       } ${ball === "4" ? styles.four : ""} ${ball === "6" ? styles.six : ""}`}
                     >
                       {ball}
@@ -223,36 +258,90 @@ export default function LiveScorePage() {
         </div>
       </div>
 
-      {/* Current Innings Stats */}
-      <div className={styles.statsSection}>
-        <ScorecardTable
-          title={`${battingTeamName} - Batting`}
-          data={currentScore.currentBatsmen}
-          type="bat"
-          activeId={currentScore.currentBatsmen?.find((b) => b.onStrike)?.player?._id}
-        />
+      {/* Scorecard Toggle */}
+      <div className={styles.scorecardToggle}>
+        <button onClick={() => setShowScorecard(!showScorecard)} className={styles.toggleBtn}>
+          {showScorecard ? "Hide" : "Show"} Full Scorecard
+        </button>
+      </div>
 
-        <ScorecardTable
-          title={`${bowlingTeamName} - Bowling`}
-          data={currentScore.bowlersPerformance}
-          type="bowl"
-          activeId={currentScore.currentBowler?._id}
-        />
+      {/* Full Scorecard */}
+      {showScorecard && (
+        <div className={styles.scorecardSection}>
+          <div className={styles.scorecardCard}>
+            <h3>{battingTeam?.name} - Batting</h3>
+            <div className={styles.scorecardTable}>
+              <div className={styles.scorecardHeader}>
+                <span className={styles.playerCol}>Batsman</span>
+                <span className={styles.statCol}>R</span>
+                <span className={styles.statCol}>B</span>
+                <span className={styles.statCol}>4s</span>
+                <span className={styles.statCol}>6s</span>
+                <span className={styles.statCol}>SR</span>
+              </div>
+              {allBatsmen.map((player) => (
+                <div key={player._id} className={styles.scorecardRow}>
+                  <div className={styles.playerCol}>
+                    <span className={styles.playerName}>{player.name}</span>
+                    <small className={styles.dismissal}>
+                      {player.battingStats?.isOut
+                        ? `${player.battingStats.dismissalType} ${
+                            player.battingStats.dismissedBy?.name || ""
+                          }`
+                        : currentScore.currentBatsmen?.some((b) => b.player._id === player._id)
+                        ? "batting"
+                        : "not out"}
+                    </small>
+                  </div>
+                  <span className={styles.statCol}>{player.battingStats?.runs || 0}</span>
+                  <span className={styles.statCol}>{player.battingStats?.balls || 0}</span>
+                  <span className={styles.statCol}>{player.battingStats?.fours || 0}</span>
+                  <span className={styles.statCol}>{player.battingStats?.sixes || 0}</span>
+                  <span className={styles.statCol}>{player.battingStats?.strikeRate || "0.0"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-        {/* Extras */}
-        <div className={styles.extrasCard}>
-          <h3>Extras</h3>
-          <div className={styles.extrasGrid}>
-            <div>Wides: {currentScore.extras?.wides || 0}</div>
-            <div>No Balls: {currentScore.extras?.noBalls || 0}</div>
-            <div>Byes: {currentScore.extras?.byes || 0}</div>
-            <div>Leg Byes: {currentScore.extras?.legByes || 0}</div>
-            <div>
-              <strong>Total: {currentScore.extras?.total || 0}</strong>
+          <div className={styles.scorecardCard}>
+            <h3>{bowlingTeam?.name} - Bowling</h3>
+            <div className={styles.scorecardTable}>
+              <div className={styles.scorecardHeader}>
+                <span className={styles.playerCol}>Bowler</span>
+                <span className={styles.statCol}>O</span>
+                <span className={styles.statCol}>R</span>
+                <span className={styles.statCol}>W</span>
+                <span className={styles.statCol}>Econ</span>
+              </div>
+              {allBowlers.map((player) => (
+                <div key={player._id} className={styles.scorecardRow}>
+                  <span className={styles.playerCol}>{player.name}</span>
+                  <span className={styles.statCol}>
+                    {player.bowlingStats?.overs || 0}.{player.bowlingStats?.balls || 0}
+                  </span>
+                  <span className={styles.statCol}>{player.bowlingStats?.runs || 0}</span>
+                  <span className={styles.statCol}>{player.bowlingStats?.wickets || 0}</span>
+                  <span className={styles.statCol}>{player.bowlingStats?.economy || "0.00"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Extras */}
+          <div className={styles.extrasCard}>
+            <h3>Extras</h3>
+            <div className={styles.extrasGrid}>
+              <div>Wides: {currentScore.extras?.wides || 0}</div>
+              <div>No Balls: {currentScore.extras?.noBalls || 0}</div>
+              <div>Byes: {currentScore.extras?.byes || 0}</div>
+              <div>Leg Byes: {currentScore.extras?.legByes || 0}</div>
+              <div>
+                <strong>Total: {currentScore.extras?.total || 0}</strong>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Previous Innings */}
       {prevInnings && (
@@ -269,14 +358,6 @@ export default function LiveScorePage() {
             )?.name || "Team"}
             : {prevInnings.runs}/{prevInnings.wickets} ({prevInnings.overs} ov)
           </div>
-
-          <ScorecardTable title="Batting Summary" data={prevInnings.currentBatsmen} type="bat" />
-
-          <ScorecardTable
-            title="Bowling Summary"
-            data={prevInnings.bowlersPerformance}
-            type="bowl"
-          />
         </div>
       )}
     </div>

@@ -1,57 +1,169 @@
-
+// // /api/score/[id]/ball/route.js - FULLY FIXED
 // import { NextResponse } from "next/server";
 // import connectDB from "@/lib/mongodb";
 // import Score from "@/models/Score";
 // import Match from "@/models/Match";
+// import Ball from "@/models/Ball";
+// import Player from "@/models/Player";
 
 // export async function POST(req, { params }) {
 //   try {
 //     await connectDB();
 //     const { id } = await params;
-//     const { runs, extraType, isWicket } = await req.json();
+//     const { runs, extraType, extraRuns, isWicket, wicketType, fielderId } = await req.json();
 
-//     // 1. Fetch Score and Match (Populate match scores to calculate target)
 //     const score = await Score.findById(id).populate("currentBatsmen.player");
-//     if (!score)
+//     if (!score) {
 //       return NextResponse.json({ success: false, error: "Score not found" }, { status: 404 });
-
-//     const match = await Match.findById(score.match).populate("scores");
-//     if (score.innings === 1) match.state = "in-progress";
-//     const striker = score.currentBatsmen?.find((b) => b.onStrike);
-//     const nonStriker = score.currentBatsmen?.find((b) => !b.onStrike);
-
-//     if (!score.currentBowler || !striker) {
-//       return NextResponse.json({ success: false, error: "Select Bowler/Striker" }, { status: 400 });
 //     }
+
+//     // Check if innings/match is completed
+//     if (score.isCompleted) {
+//       return NextResponse.json({ success: false, error: "Innings completed" }, { status: 400 });
+//     }
+
+//     const match = await Match.findById(score.match);
+//     if (match.state === "finished") {
+//       return NextResponse.json({ success: false, error: "Match finished" }, { status: 400 });
+//     }
+
+//     const strikerObj = score.currentBatsmen.find((b) => b.onStrike);
+//     const nonStrikerObj = score.currentBatsmen.find((b) => !b.onStrike);
+
+//     if (!strikerObj || !score.currentBowler) {
+//       return NextResponse.json(
+//         { success: false, error: "Select Striker and Bowler" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const striker = await Player.findById(strikerObj.player._id);
+//     const bowler = await Player.findById(score.currentBowler);
 
 //     let isValidBall = true;
+//     let totalExtraRuns = 0;
+//     let ballRuns = runs || 0;
 
-//     // 2. Process Runs & Extras
+//     // 1. Process Extras with additional runs
 //     if (extraType === "WD" || extraType === "NB") {
-//       score.runs += runs + 1;
 //       isValidBall = false;
-//     } else {
-//       score.runs += runs;
+//       totalExtraRuns = 1 + (extraRuns || 0); // 1 for extra + additional runs off the bat
+//       score.runs += totalExtraRuns;
+//       score.extras.total += totalExtraRuns;
+
+//       if (extraType === "WD") {
+//         score.extras.wides += totalExtraRuns;
+//         bowler.bowlingStats.wides += 1;
+//       } else {
+//         score.extras.noBalls += totalExtraRuns;
+//         bowler.bowlingStats.noBalls += 1;
+//       }
+
+//       bowler.bowlingStats.runs += totalExtraRuns;
+
+//       // On no-ball, batsman can score runs too
+//       if (extraType === "NB" && extraRuns > 0) {
+//         striker.battingStats.runs += extraRuns;
+//         strikerObj.runs += extraRuns;
+//         if (extraRuns === 4) striker.battingStats.fours += 1;
+//         if (extraRuns === 6) striker.battingStats.sixes += 1;
+//       }
+//     } else if (extraType === "B" || extraType === "LB") {
+//       // Byes and Leg Byes
+//       isValidBall = true;
+//       score.runs += ballRuns;
 //       score.balls += 1;
-//       striker.runs = (striker.runs || 0) + runs;
-//       striker.balls = (striker.balls || 0) + 1;
+//       score.extras.total += ballRuns;
+
+//       if (extraType === "B") {
+//         score.extras.byes += ballRuns;
+//       } else {
+//         score.extras.legByes += ballRuns;
+//       }
+
+//       strikerObj.balls += 1;
+//       striker.battingStats.balls += 1;
+//       bowler.bowlingStats.runs += ballRuns;
+//     } else {
+//       // Normal delivery
+//       isValidBall = true;
+//       score.runs += ballRuns;
+//       score.balls += 1;
+
+//       strikerObj.runs += ballRuns;
+//       strikerObj.balls += 1;
+
+//       striker.battingStats.runs += ballRuns;
+//       striker.battingStats.balls += 1;
+
+//       if (ballRuns === 4) {
+//         striker.battingStats.fours += 1;
+//       }
+//       if (ballRuns === 6) {
+//         striker.battingStats.sixes += 1;
+//       }
+
+//       bowler.bowlingStats.runs += ballRuns;
 //     }
 
-//     // 3. Handle Wickets
+//     // 2. Handle Wicket
 //     if (isWicket) {
 //       score.wickets += 1;
-//       score.currentBatsmen = score.currentBatsmen.filter((b) => !b.onStrike);
+//       bowler.bowlingStats.wickets += 1;
+
+//       striker.battingStats.isOut = true;
+//       striker.battingStats.dismissalType = wicketType || "bowled";
+//       striker.battingStats.dismissedBy = bowler._id;
+
+//       if (fielderId && (wicketType === "caught" || wicketType === "stumped")) {
+//         striker.battingStats.caughtBy = fielderId;
+//       }
+
+//       // Remove striker from current batsmen
+//       score.currentBatsmen = score.currentBatsmen.filter(
+//         (b) => b.player._id.toString() !== striker._id.toString()
+//       );
 //     }
 
-//     // 4. Bowler Stats Logic
-//     if (!score.bowlersPerformance) score.bowlersPerformance = [];
-//     let bp = score.bowlersPerformance.find(
-//       (b) => b.player && b.player.toString() === score.currentBowler.toString()
-//     );
+//     // 3. Record Ball
+//     await Ball.create({
+//       match: match._id,
+//       score: score._id,
+//       innings: score.innings,
+//       overNumber: score.overs,
+//       ballNumber: score.balls,
+//       batsman: striker._id,
+//       bowler: bowler._id,
+//       runs: extraType && extraType !== "B" && extraType !== "LB" ? 0 : ballRuns,
+//       extras: { type: extraType || "", runs: totalExtraRuns },
+//       isWicket,
+//       wicketType: wicketType || "",
+//       dismissedPlayer: isWicket ? striker._id : null,
+//       fielder: fielderId || null,
+//       isFour: ballRuns === 4 && !extraType,
+//       isSix: ballRuns === 6 && !extraType,
+//       isLegalDelivery: isValidBall,
+//     });
 
+//     // 4. Update score timeline
+//     const ballLabel = isWicket
+//       ? "W"
+//       : extraType === "WD"
+//       ? `${totalExtraRuns}WD`
+//       : extraType === "NB"
+//       ? `${totalExtraRuns}NB`
+//       : extraType === "B"
+//       ? `${ballRuns}B`
+//       : extraType === "LB"
+//       ? `${ballRuns}LB`
+//       : ballRuns.toString();
+//     score.scoreEveryBall.push(ballLabel);
+
+//     // 5. Update Bowler Performance
+//     let bp = score.bowlersPerformance.find((b) => b.player.toString() === bowler._id.toString());
 //     if (!bp) {
 //       score.bowlersPerformance.push({
-//         player: score.currentBowler,
+//         player: bowler._id,
 //         runs: 0,
 //         wickets: 0,
 //         overs: 0,
@@ -59,93 +171,92 @@
 //       });
 //       bp = score.bowlersPerformance[score.bowlersPerformance.length - 1];
 //     }
-//     bp.runs += extraType === "WD" || extraType === "NB" ? runs + 1 : runs;
+
 //     if (isValidBall) {
 //       bp.balls += 1;
+//       bowler.bowlingStats.balls += 1;
+
 //       if (bp.balls === 6) {
 //         bp.overs += 1;
 //         bp.balls = 0;
+//         bowler.bowlingStats.overs += 1;
+//         bowler.bowlingStats.balls = 0;
 //       }
 //     }
+
+//     bp.runs += extraType ? totalExtraRuns : ballRuns;
 //     if (isWicket) bp.wickets += 1;
 
-//     // 5. Strike Rotation
-//     if (!isWicket && runs % 2 !== 0 && nonStriker) {
-//       striker.onStrike = false;
-//       nonStriker.onStrike = true;
+//     // 6. Strike Rotation
+//     let overEnded = false;
+
+//     // Rotate strike on odd runs (1, 3, 5) if no wicket
+//     const runsToConsider = extraType === "WD" ? extraRuns || 0 : ballRuns;
+//     if (!isWicket && [1, 3, 5].includes(runsToConsider)) {
+//       if (strikerObj && nonStrikerObj) {
+//         strikerObj.onStrike = false;
+//         nonStrikerObj.onStrike = true;
+//       }
 //     }
 
-//     // 6. Over End Logic
-//     let overEnded = false;
+//     // 7. Over Completion
 //     if (isValidBall && score.balls === 6) {
 //       score.overs += 1;
 //       score.balls = 0;
 //       overEnded = true;
-//       if (score.currentBatsmen.length === 2) {
-//         score.currentBatsmen.forEach((b) => (b.onStrike = !b.onStrike));
-//       }
+
+//       // Rotate strike at over end
+//       score.currentBatsmen.forEach((b) => {
+//         b.onStrike = !b.onStrike;
+//       });
 //     }
 
-//     // 7. TIMELINE & RUN RATE
-//     score.scoreEveryBall.push(`${extraType || ""}${runs}${isWicket ? "W" : ""}`);
-//     score.calculateRunRate();
-
-//     // 8. MATCH FINISHING LOGIC
+//     // 8. Check Innings Completion
 //     let inningsFinished = false;
-//     let matchFinished = false;
 
-//     const firstInnings = match.scores.find((s) => s.innings === 1);
-//     const target = firstInnings ? firstInnings.runs + 1 : null;
-
-//     // Condition A: All out or Overs finished
-//     if (score.wickets >= 10 || score.overs >= (match.overs || 20)) {
-//       inningsFinished = true;
+//     // All wickets down
+//     if (score.wickets >= match.totalWickets) {
 //       score.isCompleted = true;
-//       if (score.innings === 2) matchFinished = true;
+//       inningsFinished = true;
 //     }
 
-//     // Condition B: Second Innings Target reached
-//     if (score.innings === 2 && target && score.runs >= target) {
-//       inningsFinished = true;
-//       matchFinished = true;
+//     // All overs completed
+//     if (score.overs >= match.overs) {
 //       score.isCompleted = true;
+//       inningsFinished = true;
 //     }
 
-//     // 9. UPDATE WINNER & STATUS
-//     if (matchFinished) {
-//       match.status = "finished";
+//     // Target chased in 2nd innings
+//     if (match.currentInnings === 2 && score.runs >= score.target) {
+//       score.isCompleted = true;
 //       inningsFinished = true;
-//       if (score.runs >= target) {
-//         match.winner = score.battingTeam; // Chased successfully
-//       } else if (score.runs < target - 1) {
-//         match.winner = score.bowlingTeam; // Failed to chase
-//       } else {
-//         match.winner = null; // It's a Tie
-//       }
+//       match.state = "finished";
+//       match.winner = score.battingTeam;
+//       const wicketsLeft = match.totalWickets - score.wickets;
+//       match.winningMargin = `by ${wicketsLeft} wickets`;
 //       await match.save();
 //     }
 
-//     await score.save();
+//     // 9. Save all updates
+//     score.calculateRunRate();
+//     striker.calculateStrikeRate();
+//     bowler.calculateEconomy();
 
-//     const updatedScore = await Score.findById(id)
-//       .populate("currentBatsmen.player")
-//       .populate("currentBowler")
-//       .populate("bowlersPerformance.player");
+//     await Promise.all([score.save(), striker.save(), bowler.save()]);
 
 //     return NextResponse.json({
 //       success: true,
-//       score: updatedScore,
 //       overEnded,
 //       inningsFinished,
-//       matchFinished,
+//       matchFinished: match.state === "finished",
 //     });
 //   } catch (err) {
-//     console.error("API Error:", err);
+//     console.error("Ball scoring error:", err);
 //     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
 //   }
 // }
 
-
+// /api/score/[id]/ball/route.js - FULLY FIXED
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Score from "@/models/Score";
@@ -157,66 +268,122 @@ export async function POST(req, { params }) {
   try {
     await connectDB();
     const { id } = await params;
-    const { runs, extraType, isWicket } = await req.json();
+    const { runs, extraType, extraRuns, isWicket, wicketType, fielderId } = await req.json();
 
     const score = await Score.findById(id).populate("currentBatsmen.player");
-    if (!score || score.isCompleted) return NextResponse.json({ success: false, error: "Finished" }, { status: 400 });
+    if (!score) {
+      return NextResponse.json({ success: false, error: "Score not found" }, { status: 404 });
+    }
+
+    // Check if innings/match is completed
+    if (score.isCompleted) {
+      return NextResponse.json({ success: false, error: "Innings completed" }, { status: 400 });
+    }
 
     const match = await Match.findById(score.match);
+    if (match.state === "finished") {
+      return NextResponse.json({ success: false, error: "Match finished" }, { status: 400 });
+    }
+
     const strikerObj = score.currentBatsmen.find((b) => b.onStrike);
     const nonStrikerObj = score.currentBatsmen.find((b) => !b.onStrike);
-    
+
     if (!strikerObj || !score.currentBowler) {
-      return NextResponse.json({ success: false, error: "Select Striker/Bowler" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "Select Striker and Bowler" },
+        { status: 400 }
+      );
     }
 
     const striker = await Player.findById(strikerObj.player._id);
     const bowler = await Player.findById(score.currentBowler);
 
-    
-
     let isValidBall = true;
-    let extraRuns = 0;
+    let totalExtraRuns = 0;
+    let ballRuns = runs || 0;
 
-    // 1. Process Extras & Runs
+    // 1. Process Extras with additional runs
     if (extraType === "WD" || extraType === "NB") {
       isValidBall = false;
-      extraRuns = runs + 1;
-      score.runs += extraRuns;
+      totalExtraRuns = 1 + (extraRuns || 0); // 1 for extra + additional runs off the bat
+      score.runs += totalExtraRuns;
+      score.extras.total += totalExtraRuns;
+
       if (extraType === "WD") {
-        score.extras.wides += extraRuns;
+        score.extras.wides += totalExtraRuns;
         bowler.bowlingStats.wides += 1;
       } else {
-        score.extras.noBalls += extraRuns;
+        score.extras.noBalls += totalExtraRuns;
         bowler.bowlingStats.noBalls += 1;
       }
-    } else {
-      score.runs += runs;
+
+      bowler.bowlingStats.runs += totalExtraRuns;
+
+      // On no-ball, batsman can score runs too
+      if (extraType === "NB" && extraRuns > 0) {
+        striker.battingStats.runs += extraRuns;
+        strikerObj.runs += extraRuns;
+        if (extraRuns === 4) striker.battingStats.fours += 1;
+        if (extraRuns === 6) striker.battingStats.sixes += 1;
+      }
+    } else if (extraType === "B" || extraType === "LB") {
+      // Byes and Leg Byes
+      isValidBall = true;
+      score.runs += ballRuns;
       score.balls += 1;
-      strikerObj.runs += runs;
+      score.extras.total += ballRuns;
+
+      if (extraType === "B") {
+        score.extras.byes += ballRuns;
+      } else {
+        score.extras.legByes += ballRuns;
+      }
+
       strikerObj.balls += 1;
-      
-      // Update Player Stats
-      striker.battingStats.runs += runs;
       striker.battingStats.balls += 1;
-      if (runs === 4) striker.battingStats.fours += 1;
-      if (runs === 6) striker.battingStats.sixes += 1;
+      bowler.bowlingStats.runs += ballRuns;
+    } else {
+      // Normal delivery
+      isValidBall = true;
+      score.runs += ballRuns;
+      score.balls += 1;
+
+      strikerObj.runs += ballRuns;
+      strikerObj.balls += 1;
+
+      striker.battingStats.runs += ballRuns;
+      striker.battingStats.balls += 1;
+
+      if (ballRuns === 4) {
+        striker.battingStats.fours += 1;
+      }
+      if (ballRuns === 6) {
+        striker.battingStats.sixes += 1;
+      }
+
+      bowler.bowlingStats.runs += ballRuns;
     }
 
     // 2. Handle Wicket
     if (isWicket) {
       score.wickets += 1;
       bowler.bowlingStats.wickets += 1;
-      
-      // Update Batsman stats
+
       striker.battingStats.isOut = true;
-      striker.battingStats.dismissalType = "bowled"; 
+      striker.battingStats.dismissalType = wicketType || "bowled";
       striker.battingStats.dismissedBy = bowler._id;
-      
-      score.currentBatsmen = score.currentBatsmen.filter(b => !b.onStrike);
+
+      if (fielderId && (wicketType === "caught" || wicketType === "stumped")) {
+        striker.battingStats.caughtBy = fielderId;
+      }
+
+      // Remove striker from current batsmen
+      score.currentBatsmen = score.currentBatsmen.filter(
+        (b) => b.player._id.toString() !== striker._id.toString()
+      );
     }
 
-    // 3. Create Ball Document (Record Ball by Ball)
+    // 3. Record Ball
     await Ball.create({
       match: match._id,
       score: score._id,
@@ -225,48 +392,127 @@ export async function POST(req, { params }) {
       ballNumber: score.balls,
       batsman: striker._id,
       bowler: bowler._id,
-      runs: (extraType === "WD" || extraType === "NB") ? 0 : runs,
-      extras: { type: extraType || "", runs: extraRuns },
+      runs: extraType && extraType !== "B" && extraType !== "LB" ? 0 : ballRuns,
+      extras: { type: extraType || "", runs: totalExtraRuns },
       isWicket,
-      isLegalDelivery: isValidBall
+      wicketType: wicketType || "",
+      dismissedPlayer: isWicket ? striker._id : null,
+      fielder: fielderId || null,
+      isFour: ballRuns === 4 && !extraType,
+      isSix: ballRuns === 6 && !extraType,
+      isLegalDelivery: isValidBall,
     });
 
-    // 4. Update Bowler Local Performance
-    let bp = score.bowlersPerformance.find(b => b.player.toString() === bowler._id.toString());
+    // 4. Update score timeline
+    const ballLabel = isWicket
+      ? "W"
+      : extraType === "WD"
+      ? `${totalExtraRuns}WD`
+      : extraType === "NB"
+      ? `${totalExtraRuns}NB`
+      : extraType === "B"
+      ? `${ballRuns}B`
+      : extraType === "LB"
+      ? `${ballRuns}LB`
+      : ballRuns.toString();
+    score.scoreEveryBall.push(ballLabel);
+
+    // 5. Update Bowler Performance
+    let bp = score.bowlersPerformance.find((b) => b.player.toString() === bowler._id.toString());
     if (!bp) {
-      score.bowlersPerformance.push({ player: bowler._id, runs: 0, wickets: 0, overs: 0, balls: 0 });
+      score.bowlersPerformance.push({
+        player: bowler._id,
+        runs: 0,
+        wickets: 0,
+        overs: 0,
+        balls: 0,
+      });
       bp = score.bowlersPerformance[score.bowlersPerformance.length - 1];
     }
-    bp.runs += (isValidBall ? runs : extraRuns);
+
     if (isValidBall) {
       bp.balls += 1;
-      if (bp.balls === 6) { bp.overs += 1; bp.balls = 0; }
+      bowler.bowlingStats.balls += 1;
+
+      if (bp.balls === 6) {
+        bp.overs += 1;
+        bp.balls = 0;
+        bowler.bowlingStats.overs += 1;
+        bowler.bowlingStats.balls = 0;
+      }
     }
+
+    bp.runs += extraType ? totalExtraRuns : ballRuns;
     if (isWicket) bp.wickets += 1;
 
-    // 5. Strike Rotation & Over Logic
-    if (!isWicket && (runs === 1 || runs === 3)) {
-      strikerObj.onStrike = false;
-      if (nonStrikerObj) nonStrikerObj.onStrike = true;
+    // 6. Strike Rotation
+    let overEnded = false;
+
+    // Rotate strike on odd runs (1, 3, 5) if no wicket
+    const runsToConsider = extraType === "WD" ? extraRuns || 0 : ballRuns;
+    if (!isWicket && [1, 3, 5].includes(runsToConsider)) {
+      if (strikerObj && nonStrikerObj) {
+        strikerObj.onStrike = false;
+        nonStrikerObj.onStrike = true;
+      }
     }
 
-    let overEnded = false;
+    // 7. Over Completion
     if (isValidBall && score.balls === 6) {
       score.overs += 1;
       score.balls = 0;
       overEnded = true;
-      score.currentBatsmen.forEach(b => b.onStrike = !b.onStrike);
+
+      // Rotate strike at over end
+      score.currentBatsmen.forEach((b) => {
+        b.onStrike = !b.onStrike;
+      });
     }
 
-    // Save all
+    // 8. Check Innings Completion
+    let inningsFinished = false;
+    let matchFinished = false;
+
+    // All wickets down
+    if (score.wickets >= match.totalWickets) {
+      score.isCompleted = true;
+      inningsFinished = true;
+    }
+
+    // All overs completed
+    if (score.overs >= match.overs) {
+      score.isCompleted = true;
+      inningsFinished = true;
+    }
+
+    // Target chased in 2nd innings
+    if (match.currentInnings === 2 && score.runs >= score.target) {
+      score.isCompleted = true;
+      inningsFinished = true;
+      matchFinished = true;
+      match.state = "finished";
+      match.winner = score.battingTeam;
+      const wicketsLeft = match.totalWickets - score.wickets;
+      match.winningMargin = `by ${wicketsLeft} wickets`;
+      await match.save();
+    }
+
+    // 9. Save all updates
     score.calculateRunRate();
     striker.calculateStrikeRate();
     bowler.calculateEconomy();
-    
+
     await Promise.all([score.save(), striker.save(), bowler.save()]);
 
-    return NextResponse.json({ success: true, overEnded });
+    return NextResponse.json({
+      success: true,
+      overEnded,
+      inningsFinished,
+      matchFinished,
+      winningMargin: match.winningMargin,
+    });
   } catch (err) {
+    console.error("Ball scoring error:", err);
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

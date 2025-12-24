@@ -101,7 +101,7 @@ export default function MatchPage() {
 
   // Render action buttons based on match state
   const renderActionButtons = () => {
-    if (match.state === "scheduled") {
+    if (match.state === "scheduled" || "ready-to-start") {
       return (
         <>
           <button onClick={() => setShowSquadModal(true)} className={styles.btn}>
@@ -167,9 +167,7 @@ export default function MatchPage() {
       {/* Match Header */}
       <div className={styles.matchHeader}>
         <h1 className={styles.title}>{match.title}</h1>
-        <div className={styles.versus}>
-          {match.teams.map((t) => t.shortName).join(" vs ")}
-        </div>
+        <div className={styles.versus}>{match.teams.map((t) => t.shortName).join(" vs ")}</div>
       </div>
 
       {/* Match Info Card */}
@@ -228,7 +226,7 @@ export default function MatchPage() {
         {match.teams.map((team) => (
           <div key={team._id} className={styles.teamCard}>
             <h3 className={styles.teamName}>{team.name}</h3>
-            
+
             {team.players && team.players.length > 0 ? (
               <div className={styles.playersGrid}>
                 {team.players.map((p) => (
