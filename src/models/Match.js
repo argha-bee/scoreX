@@ -29,6 +29,7 @@ const MatchSchema = new mongoose.Schema(
       enum: [
         "scheduled",
         "toss",
+        "live",
         "in-progress",
         "1st-innings",
         "2nd-innings",

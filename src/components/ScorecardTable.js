@@ -95,15 +95,15 @@ import styles from "@/styles/ScorecardTable.module.css";
 import { useEffect, useState } from "react";
 
 export default function ScorecardTable({ title, data, type, activeId }) {
-  // const [players, setPlayers] = useState([]);
+  const [players, setPlayers] = useState([]);
 
-  // useEffect(() => {
-  //   if (data && Array.isArray(data)) {
-  //     setPlayers(data);
-  //   }
-  // }, [data]);
+  useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setPlayers(data);
+    }
+  }, [data]);
 
-  const players = data;
+  // const players = data;
 
   if (!players || players.length === 0) {
     return (

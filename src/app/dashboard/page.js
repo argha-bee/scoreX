@@ -48,7 +48,7 @@ export default function Dashboard() {
               <strong>Teams:</strong> {match.teams.map((t) => t.shortName).join(" vs ")}
             </p>
             <p>
-              <strong>Status:</strong> {match.status.toUpperCase()}
+              <strong>Status:</strong> {match.state.toUpperCase()}
             </p>
           </li>
         ))}
