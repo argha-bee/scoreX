@@ -1,3 +1,4 @@
+// /api/match/[id]/next-innings/route.js - FIXED
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Match from "@/models/Match";
@@ -7,14 +8,24 @@ export async function POST(req, { params }) {
   try {
     await connectDB();
     const { id } = await params;
+
     const match = await Match.findById(id).populate("scores");
 
-    let isMatchOver = false;
-    let winner = null;
+    if (!match) {
+      return NextResponse.json({ success: false, error: "Match not found" }, { status: 404 });
+    }
 
     if (match.currentInnings === 1) {
-      // Setup 2nd Innings
+      // Start 2nd Innings
       const firstInnings = match.scores[0];
+
+      if (!firstInnings.isCompleted) {
+        return NextResponse.json(
+          { success: false, error: "First innings not completed" },
+          { status: 400 }
+        );
+      }
+
       const secondInnings = await Score.create({
         match: match._id,
         innings: 2,
@@ -25,23 +36,54 @@ export async function POST(req, { params }) {
         overs: 0,
         balls: 0,
         target: firstInnings.runs + 1,
+        currentBatsmen: [],
+        bowlersPerformance: [],
+        scoreEveryBall: [],
       });
 
       match.scores.push(secondInnings._id);
       match.currentInnings = 2;
       match.state = "2nd-innings";
+      match.battingTeam = firstInnings.bowlingTeam;
+      match.bowlingTeam = firstInnings.battingTeam;
+
       await match.save();
-      return NextResponse.json({ success: true, finished: false });
-    } else {
-      // Match Over
+
+      return NextResponse.json({
+        success: true,
+        finished: false,
+        message: "Second innings started",
+      });
+    } else if (match.currentInnings === 2) {
+      // Match Over - Calculate Winner
+      const [innings1, innings2] = match.scores;
+
       match.state = "finished";
-      const s1 = match.scores[0].runs;
-      const s2 = match.scores[1].runs;
-      match.winner = s1 > s2 ? match.scores[0].battingTeam : match.scores[1].battingTeam;
+
+      if (innings1.runs > innings2.runs) {
+        match.winner = innings1.battingTeam;
+        match.winningMargin = `by ${innings1.runs - innings2.runs} runs`;
+      } else if (innings2.runs > innings1.runs) {
+        match.winner = innings2.battingTeam;
+        const wicketsLeft = match.totalWickets - innings2.wickets;
+        match.winningMargin = `by ${wicketsLeft} wickets`;
+      } else {
+        match.winningMargin = "Match Tied";
+      }
+
       await match.save();
-      return NextResponse.json({ success: true, finished: true });
+
+      return NextResponse.json({
+        success: true,
+        finished: true,
+        winner: match.winner,
+        winningMargin: match.winningMargin,
+      });
     }
+
+    return NextResponse.json({ success: false, error: "Invalid innings state" }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ success: false, error: err.message });
+    console.error("Next innings error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
