@@ -1,10 +1,9 @@
-// [...nextauth].ts
-
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import { redirect } from "next/dist/server/api-utils";
 
 export const authOptions = {
   debug: true,
@@ -66,7 +65,7 @@ export const authOptions = {
             username,
             email: user.email,
             name: user.name,
-            profilePicture: user.image, // Google profile image
+            profilePicture: user.image,
             provider: "google",
             providerId: account.providerAccountId,
             emailVerified: true,
@@ -76,7 +75,6 @@ export const authOptions = {
       }
       return true;
     },
-
     async jwt({ token, user }) {
       await connectDB();
 

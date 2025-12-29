@@ -9,15 +9,12 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: session } = useSession();
 
-  // State to track the active link
   const [activeLink, setActiveLink] = useState("");
 
-  // Helper function to check if the link is active
   const isActiveLink = (path) => {
     return activeLink === path ? styles.navbarLinkActive : "";
   };
 
-  // Update the active link when a user clicks on a link
   const handleLinkClick = (path) => {
     setActiveLink(path);
   };
@@ -25,20 +22,13 @@ export default function Navbar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.navbarContent}>
-        {/* Logo */}
         <Link href="/dashboard" className={styles.navbarLogo}>
           Score<span className={styles.spanX}>X</span>
         </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 items-center">
-          <Link
-            href="/"
-            className={`${styles.navbarLink} ${isActiveLink("/")}`}
-            onClick={() => handleLinkClick("/")}
-          >
-            Home
-          </Link>
+          
           <Link
             href="/dashboard"
             className={`${styles.navbarLink} ${isActiveLink("/dashboard")}`}
@@ -46,13 +36,7 @@ export default function Navbar() {
           >
             Dashboard
           </Link>
-          <Link
-            href="/about"
-            className={`${styles.navbarLink} ${isActiveLink("/about")}`}
-            onClick={() => handleLinkClick("/about")}
-          >
-            Records
-          </Link>
+          
           {session && (
             <Link
               href="/dashboard/create"
@@ -83,10 +67,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button (Only visible on mobile/tablet) */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`${styles.navbarToggle} md:hidden`} // Only show on smaller screens
+          className={`${styles.navbarToggle} md:hidden`} 
         >
           <svg
             className={`${styles.navbarIcon} ${menuOpen ? styles.navbarIconOpen : ""}`}
@@ -114,19 +97,9 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu (Only visible on mobile/tablet) */}
       {menuOpen && (
         <div className={`${styles.navbarMobileMenu} ${menuOpen ? "open" : ""} md:hidden`}>
-          <Link
-            href="/"
-            className={`${styles.navbarMobileLink} ${isActiveLink("/")}`}
-            onClick={() => {
-              handleLinkClick("/");
-              setMenuOpen(false);
-            }}
-          >
-            Home
-          </Link>
+          
           <Link
             href="/dashboard"
             className={`${styles.navbarMobileLink} ${isActiveLink("/dashboard")}`}
@@ -137,22 +110,14 @@ export default function Navbar() {
           >
             Dashboard
           </Link>
-          <Link
-            href="/about"
-            className={`${styles.navbarMobileLink} ${isActiveLink("/about")}`}
-            onClick={() => {
-              handleLinkClick("/about");
-              setMenuOpen(false);
-            }}
-          >
-            About
-          </Link>
+          
+        
 
           {session ? (
             <div className={styles.navbarUser}>
               <span className={styles.navbarUserName}>{session.user?.name}</span>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: "/dashboard" })}
                 className={`${styles.navbarMobileLink} bg-indigo-600 text-white`}
               >
                 Sign Out

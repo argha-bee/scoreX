@@ -1,5 +1,4 @@
-"use client"; // This is a client component
-
+"use client";
 import { SessionProvider } from "next-auth/react";
 
 export default function SessionProviderWrapper({ children, session }) {

@@ -37,7 +37,6 @@ export async function GET(req) {
     await user.save();
 
     return NextResponse.json({ message: "Email verified. goto login" });
-    // return NextResponse.redirect(new URL("/login", NEXT_APP_URL));
   } catch (err) {
     console.log("Email verification error: ", err);
     return NextResponse.json({ message: "Email Verification Error." }, { status: 500 });

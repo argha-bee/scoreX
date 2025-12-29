@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
@@ -20,6 +20,14 @@ export default function CreateMatchPage() {
   const [isCustom, setIsCustom] = useState(false);
   const [date, setDate] = useState("");
 
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const maxDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 15); 
+    return d.toISOString().split("T")[0];
+  }, []);
+
   const createMatch = async () => {
     if (!title || !team1 || !team2 || !overs) {
       Swal.fire("Error", "All fields are required", "error");
@@ -35,13 +43,13 @@ export default function CreateMatchPage() {
         format,
         overs,
         wickets,
+        date: date || null,
         team1: { name: team1, shortName: team1.slice(0, 3).toUpperCase() },
         team2: { name: team2, shortName: team2.slice(0, 3).toUpperCase() },
       });
 
       Swal.fire("Success", "Match created successfully", "success");
-
-      router.push(`/dashboard/`);
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
       Swal.fire("Error", err.response?.data?.message || "Failed to create match", "error");
@@ -81,6 +89,7 @@ export default function CreateMatchPage() {
               onChange={(e) => setTeam1(e.target.value)}
             />
           </div>
+
           <div className={styles.col}>
             <label>Team 2</label>
             <input
@@ -100,11 +109,12 @@ export default function CreateMatchPage() {
               onChange={(e) => {
                 const val = e.target.value;
                 setFormat(val);
+
                 if (val === "Custom") {
                   setIsCustom(true);
                 } else {
                   setIsCustom(false);
-                  setOvers(val === "T20" ? 20 : 50); // set default overs for T20/ODI
+                  setOvers(val === "T20" ? 20 : 50);
                 }
               }}
             >
@@ -119,18 +129,19 @@ export default function CreateMatchPage() {
             <input
               type="date"
               value={date}
-              min={Date.now()}
-              max={Date.now() + 15}
-              onChange={(e) => setDate(Number(e.target.value))}
+              min={today}
+              max={maxDate}
+              onChange={(e) => setDate(e.target.value)}
             />
           </div>
         </div>
+
         {isCustom && (
           <div className={styles.row}>
             <div className={styles.col}>
               <label>Wickets</label>
               <input
-                type="wickets"
+                type="number"
                 value={wickets}
                 min={1}
                 max={15}
@@ -150,6 +161,7 @@ export default function CreateMatchPage() {
             </div>
           </div>
         )}
+
         <button onClick={createMatch} disabled={loading} className={styles.button}>
           {loading ? "Creating..." : "Create Match"}
         </button>

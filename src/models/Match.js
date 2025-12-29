@@ -93,17 +93,13 @@ const MatchSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/**
- * VIRTUAL PUBLIC STATUS
- * Computes match status from internal state
- */
+
 MatchSchema.virtual("status").get(function () {
   if (this.state === "completed" || this.state === "abandoned") return "completed";
   if (this.state === "in-progress" || this.state === "innings-break") return "ongoing";
   return "upcoming";
 });
 
-// Allow virtuals in JSON
 MatchSchema.set("toJSON", { virtuals: true });
 MatchSchema.set("toObject", { virtuals: true });
 

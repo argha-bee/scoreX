@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import styles from "@/styles/Auth.module.css";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
 
@@ -22,7 +24,7 @@ export default function LoginPage() {
     });
 
     if (res.error) setError(res.error);
-    if (res.ok) window.location.href = "/dashboard";
+    else router.push("/dashboard");
   };
 
   return (

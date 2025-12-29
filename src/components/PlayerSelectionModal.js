@@ -1,4 +1,4 @@
-// /components/PlayerSelectionModal.jsx
+
 import styles from "@/styles/PlayerSelectionModal.module.css";
 
 export default function PlayerSelectionModal({ title, players, onSelect, onClose }) {

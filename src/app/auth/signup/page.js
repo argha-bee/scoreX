@@ -71,7 +71,6 @@ export default function SignupPage() {
           required
         />
 
-        {/* Password Field */}
         <div className={styles.passwordWrapper}>
           <input
             type={showPassword.password ? "text" : "password"}
@@ -91,7 +90,6 @@ export default function SignupPage() {
           </button>
         </div>
 
-        {/* Confirm Password Field */}
         <div className={styles.passwordWrapper}>
           <input
             type={showPassword.confirmPassword ? "text" : "password"}

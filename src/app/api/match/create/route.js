@@ -23,7 +23,6 @@ export async function POST(req) {
 
     await connectDB();
 
-    // 1️⃣ Create match
     const match = await Match.create({
       title,
       format,
@@ -35,7 +34,6 @@ export async function POST(req) {
       status: "scheduled",
     });
 
-    // 2️⃣ Create teams
     const teamOne = await Team.create({
       name: team1.name,
       shortName: team1.shortName,
@@ -48,7 +46,6 @@ export async function POST(req) {
       match: match._id,
     });
 
-    // 3️⃣ Attach teams to match
     match.teams = [teamOne._id, teamTwo._id];
     await match.save();
 

@@ -1,19 +1,18 @@
-import { NextResponse } from "next/server"; // 🔥 THIS WAS MISSING
+import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Score from "@/models/Score";
-import Player from "@/models/Player"; // Import to ensure schema registration
+import Player from "@/models/Player"; 
 
 export async function POST(req, { params }) {
   try {
     await connectDB();
-    const { id } = await params; // Score ID
+    const { id } = await params; 
     const { playerId } = await req.json();
 
     if (!playerId) {
       return NextResponse.json({ success: false, message: "No Player ID" }, { status: 400 });
     }
 
-    // Update the current bowler and immediately populate it
     const score = await Score.findByIdAndUpdate(id, { currentBowler: playerId }, { new: true })
       .populate("currentBatsmen.player")
       .populate("currentBowler");

@@ -2,11 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      "lh3.googleusercontent.com", // For Google profile images
-      "images.birdfact.com", // credentials user image
-      "encrypted-tbn0.gstatic.com",
-    ],
+    domains: ["lh3.googleusercontent.com", "images.birdfact.com", "encrypted-tbn0.gstatic.com"],
+  },
+  experimental: {
+    turbo: false,
   },
   env: {
     MONGODB_URI: process.env.MONGODB_URI,

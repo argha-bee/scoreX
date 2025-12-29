@@ -1,4 +1,4 @@
-// /dashboard/match/[id]/live-score/page.js - FIXED
+
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
@@ -31,7 +31,6 @@ export default function LiveScorePage() {
     fetchData();
   }, [fetchData]);
 
-  // Auto-refresh every 5 seconds
   useEffect(() => {
     if (!autoRefresh) return;
 
@@ -57,7 +56,6 @@ export default function LiveScorePage() {
     return <div className={styles.error}>No score data available</div>;
   }
 
-  // Calculations
   const crr = (
     currentScore.runs / ((currentScore.overs * 6 + currentScore.balls) / 6) || 0
   ).toFixed(2);
@@ -68,7 +66,6 @@ export default function LiveScorePage() {
   const rrr =
     target && ballsLeft > 0 ? (((target - currentScore.runs) / ballsLeft) * 6).toFixed(2) : null;
 
-  // Get team names
   const battingTeam = match.teams.find(
     (t) =>
       t._id?.toString() === (currentScore.battingTeam?._id || currentScore.battingTeam)?.toString()
@@ -79,7 +76,6 @@ export default function LiveScorePage() {
       t._id?.toString() === (currentScore.bowlingTeam?._id || currentScore.bowlingTeam)?.toString()
   );
 
-  // Get ALL batsmen from batting team (including those who got out)
   const getAllBatsmen = () => {
     return allPlayers
       .filter((p) => {
@@ -91,12 +87,10 @@ export default function LiveScorePage() {
         );
       })
       .sort((a, b) => {
-        // Sort by batting order (runs desc for simple ordering)
         return (b.battingStats?.balls || 0) - (a.battingStats?.balls || 0);
       });
   };
 
-  // Get ALL bowlers who have bowled
   const getAllBowlers = () => {
     return allPlayers.filter((p) => {
       const playerTeamId = p.team?._id || p.team;
@@ -105,7 +99,6 @@ export default function LiveScorePage() {
     });
   };
 
-  // Group balls by overs for timeline
   const groupedOvers = [];
   const balls = currentScore.scoreEveryBall || [];
   for (let i = 0; i < balls.length; i += 6) {
@@ -115,14 +108,12 @@ export default function LiveScorePage() {
   const allBatsmen = getAllBatsmen();
   const allBowlers = getAllBowlers();
 
-  // Get current bowler details
   const currentBowler = currentScore.bowlersPerformance?.find(
     (b) => b.player?.toString() === currentScore.currentBowler?._id?.toString()
   );
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
         <h1 className={styles.matchTitle}>{match.title}</h1>
         <div className={styles.refreshToggle}>
@@ -140,7 +131,6 @@ export default function LiveScorePage() {
         </div>
       </div>
 
-      {/* Main Scoreboard */}
       <div className={styles.scoreboard}>
         <div className={styles.inningsLabel}>
           {match.currentInnings === 1 ? "FIRST INNINGS" : "SECOND INNINGS"}
@@ -183,7 +173,6 @@ export default function LiveScorePage() {
         )}
       </div>
 
-      {/* Current Partnership */}
       {currentScore.currentBatsmen?.length === 2 && !currentScore.isCompleted && (
         <div className={styles.partnership}>
           <h3>Current Partnership</h3>
@@ -202,7 +191,6 @@ export default function LiveScorePage() {
         </div>
       )}
 
-      {/* Current Bowler */}
       {currentScore.currentBowler && !currentScore.isCompleted && (
         <div className={styles.bowlerCard}>
           <h3>Current Bowler</h3>
@@ -224,7 +212,6 @@ export default function LiveScorePage() {
         </div>
       )}
 
-      {/* Ball Timeline */}
       <div className={styles.timeline}>
         <h3>Recent Overs</h3>
         <div className={styles.oversContainer}>
@@ -258,14 +245,12 @@ export default function LiveScorePage() {
         </div>
       </div>
 
-      {/* Scorecard Toggle */}
       <div className={styles.scorecardToggle}>
         <button onClick={() => setShowScorecard(!showScorecard)} className={styles.toggleBtn}>
           {showScorecard ? "Hide" : "Show"} Full Scorecard
         </button>
       </div>
 
-      {/* Full Scorecard */}
       {showScorecard && (
         <div className={styles.scorecardSection}>
           <div className={styles.scorecardCard}>
@@ -327,7 +312,6 @@ export default function LiveScorePage() {
             </div>
           </div>
 
-          {/* Extras */}
           <div className={styles.extrasCard}>
             <h3>Extras</h3>
             <div className={styles.extrasGrid}>

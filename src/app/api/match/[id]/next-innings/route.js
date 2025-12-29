@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Match from "@/models/Match";
@@ -20,7 +19,7 @@ export async function POST(req, { params }) {
       );
     }
 
-    // ---------- START 2ND INNINGS ----------
+
     if (match.currentInnings === 1) {
       const firstInnings = match.scores[0];
 
@@ -63,7 +62,6 @@ export async function POST(req, { params }) {
       });
     }
 
-    // ---------- FINISH MATCH ----------
     if (match.currentInnings === 2) {
       const [innings1, innings2] = match.scores;
 
