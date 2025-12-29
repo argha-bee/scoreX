@@ -1,6 +1,5 @@
-// /dashboard/match/[id]/summary/page.js
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import styles from "@/styles/MatchSummary.module.css";
@@ -13,22 +12,22 @@ export default function MatchSummaryPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("scorecard");
 
-  useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await axios.get(`/api/match/${id}/match-summary`);
-        if (res.data.success) {
-          setSummary(res.data.summary);
-        }
-      } catch (err) {
-        console.error("Error fetching summary:", err);
-      } finally {
-        setLoading(false);
+  const fetchSummary = useCallback(async () => {
+    try {
+      const res = await axios.get(`/api/match/${id}/match-summary`);
+      if (res.data.success) {
+        setSummary(res.data.summary);
       }
-    };
-
-    fetchSummary();
+    } catch (err) {
+      console.error("Error fetching summary:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
 
   if (loading) {
     return <div className={styles.loader}>Loading Match Summary...</div>;
@@ -38,8 +37,11 @@ export default function MatchSummaryPage() {
     return <div className={styles.error}>Match summary not available</div>;
   }
 
-  const { match, teams, innings } = summary;
-  const winnerTeam = teams.find((t) => t._id?.toString() === match.winner?.toString());
+  const { match, teams, innings, ballByBall } = summary;
+
+  // Safe winner lookup
+  const winnerId = match.winner?._id || match.winner;
+  const winnerTeam = teams.find((t) => (t._id || t).toString() === winnerId?.toString());
 
   return (
     <div className={styles.container}>
@@ -52,7 +54,7 @@ export default function MatchSummaryPage() {
         <div className={styles.matchInfo}>
           <span>{match.venue}</span>
           <span>•</span>
-          <span>{new Date(match.date).toLocaleDateString()}</span>
+          <span>{match.date ? new Date(match.date).toLocaleDateString() : ""}</span>
         </div>
       </div>
 
@@ -68,7 +70,7 @@ export default function MatchSummaryPage() {
           <>
             <div className={styles.resultLabel}>Match Status</div>
             <div className={styles.statusText}>
-              {match.state.replaceAll("-", " ").toUpperCase()}
+              {match.state?.replaceAll("-", " ").toUpperCase()}
             </div>
           </>
         )}
@@ -94,28 +96,28 @@ export default function MatchSummaryPage() {
       {activeTab === "scorecard" && (
         <div className={styles.scorecardSection}>
           {innings.map((inning, idx) => {
-            const battingTeam = teams.find(
-              (t) =>
-                t._id?.toString() === (inning.battingTeam?._id || inning.battingTeam)?.toString()
-            );
-            const bowlingTeam = teams.find(
-              (t) =>
-                t._id?.toString() === (inning.bowlingTeam?._id || inning.bowlingTeam)?.toString()
-            );
+            const batId = inning.battingTeam?._id || inning.battingTeam;
+            const bowlId = inning.bowlingTeam?._id || inning.bowlingTeam;
+
+            const battingTeam = teams.find((t) => (t._id || t).toString() === batId?.toString());
+            const bowlingTeam = teams.find((t) => (t._id || t).toString() === bowlId?.toString());
 
             return (
               <div key={idx} className={styles.inningsCard}>
                 <div className={styles.inningsHeader}>
-                  <h2>
-                    {battingTeam?.name || "Team"} - Innings {inning.innings}
-                  </h2>
+                  <h2>{battingTeam?.name || `Innings ${inning.innings}`}</h2>
                   <div className={styles.inningsScore}>
                     {inning.runs}/{inning.wickets} ({inning.overs}.{inning.balls} ov)
                   </div>
                 </div>
 
-                <div className={styles.extrasInfo}>
+                {/* <div className={styles.extrasInfo}>
                   Extras: {inning.extras?.total || 0} (WD: {inning.extras?.wides || 0}, NB:{" "}
+                  {inning.extras?.noBalls || 0}, B: {inning.extras?.byes || 0}, LB:{" "}
+                  {inning.extras?.legByes || 0})
+                </div> */}
+                <div className={styles.extrasInfo}>
+                  Extras: {inning.extras?.total || 0} ( WD: {inning.extras?.wides || 0}, NB:{" "}
                   {inning.extras?.noBalls || 0}, B: {inning.extras?.byes || 0}, LB:{" "}
                   {inning.extras?.legByes || 0})
                 </div>
@@ -127,7 +129,7 @@ export default function MatchSummaryPage() {
                 <ScorecardTable title="Batting" data={inning.batsmen} type="bat" />
 
                 <ScorecardTable
-                  title={`${bowlingTeam?.name || "Team"} Bowling`}
+                  title={`${bowlingTeam?.name || "Opponent"} Bowling`}
                   data={inning.bowlers}
                   type="bowl"
                 />
@@ -141,20 +143,19 @@ export default function MatchSummaryPage() {
       {activeTab === "timeline" && (
         <div className={styles.timelineSection}>
           {innings.map((inning, inningIdx) => {
-            const battingTeam = teams.find(
-              (t) =>
-                t._id?.toString() === (inning.battingTeam?._id || inning.battingTeam)?.toString()
-            );
+            const batId = inning.battingTeam?._id || inning.battingTeam;
+            const battingTeam = teams.find((t) => (t._id || t).toString() === batId?.toString());
 
-            // Group balls by over
+            // Group balls by over safely
             const ballsByOver = {};
-            summary.ballByBall
+            (ballByBall || [])
               .filter((ball) => ball.innings === inning.innings)
               .forEach((ball) => {
-                if (!ballsByOver[ball.overNumber]) {
-                  ballsByOver[ball.overNumber] = [];
+                const overNum = ball.overNumber;
+                if (!ballsByOver[overNum]) {
+                  ballsByOver[overNum] = [];
                 }
-                ballsByOver[ball.overNumber].push(ball);
+                ballsByOver[overNum].push(ball);
               });
 
             return (
@@ -166,61 +167,63 @@ export default function MatchSummaryPage() {
                 {Object.keys(ballsByOver).length === 0 ? (
                   <p className={styles.emptyTimeline}>No ball-by-ball data available</p>
                 ) : (
-                  Object.entries(ballsByOver).map(([overNum, balls]) => (
-                    <div key={overNum} className={styles.overCard}>
-                      <div className={styles.overHeader}>
-                        <span className={styles.overNum}>Over {overNum}</span>
-                        <span className={styles.overBowler}>
-                          {balls[0]?.bowler?.name || "Unknown Bowler"}
-                        </span>
-                      </div>
+                  Object.entries(ballsByOver)
+                    .reverse()
+                    .map(([overNum, balls]) => (
+                      <div key={overNum} className={styles.overCard}>
+                        <div className={styles.overHeader}>
+                          <span className={styles.overNum}>Over {overNum}</span>
+                          <span className={styles.overBowler}>
+                            {balls[0]?.bowler?.name || "Bowler"}
+                          </span>
+                        </div>
 
-                      <div className={styles.ballsList}>
-                        {balls.map((ball, ballIdx) => {
-                          const runLabel = ball.isWicket
-                            ? "W"
-                            : ball.extras?.type
-                            ? `${ball.extras.runs}${ball.extras.type.substring(0, 2)}`
-                            : ball.runs.toString();
+                        <div className={styles.ballsList}>
+                          {balls.map((ball, ballIdx) => {
+                            const runLabel = ball.isWicket
+                              ? "W"
+                              : ball.extras?.type
+                              ? `${ball.extras.runs || ""}${ball.extras.type.substring(0, 2)}`
+                              : ball.runs?.toString() || "0";
 
-                          return (
-                            <div key={ballIdx} className={styles.ballItem}>
-                              <div
-                                className={`${styles.ballBadge} ${
-                                  ball.isWicket
-                                    ? styles.wicketBall
-                                    : ball.isFour
-                                    ? styles.fourBall
-                                    : ball.isSix
-                                    ? styles.sixBall
-                                    : ""
-                                }`}
-                              >
-                                {runLabel}
+                            return (
+                              <div key={ballIdx} className={styles.ballItem}>
+                                <div
+                                  className={`${styles.ballBadge} ${
+                                    ball.isWicket
+                                      ? styles.wicketBall
+                                      : ball.runs === 4
+                                      ? styles.fourBall
+                                      : ball.runs === 6
+                                      ? styles.sixBall
+                                      : ""
+                                  }`}
+                                >
+                                  {runLabel}
+                                </div>
+                                <div className={styles.ballDetails}>
+                                  <strong>{ball.batsman?.name}</strong>
+                                  {ball.isWicket && (
+                                    <span className={styles.wicketInfo}>
+                                      {ball.wicketType} by {ball.bowler?.name}
+                                      {ball.fielder?.name && ` (c ${ball.fielder.name})`}
+                                    </span>
+                                  )}
+                                  {ball.commentary && (
+                                    <span className={styles.commentary}>{ball.commentary}</span>
+                                  )}
+                                </div>
                               </div>
-                              <div className={styles.ballDetails}>
-                                <strong>{ball.batsman?.name}</strong>
-                                {ball.isWicket && (
-                                  <span className={styles.wicketInfo}>
-                                    {ball.wicketType} by {ball.bowler?.name}
-                                    {ball.fielder && ` (c ${ball.fielder.name})`}
-                                  </span>
-                                )}
-                                {ball.commentary && (
-                                  <span className={styles.commentary}>{ball.commentary}</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
 
-                      <div className={styles.overSummary}>
-                        {balls.reduce((sum, b) => sum + (b.runs || 0) + (b.extras?.runs || 0), 0)}{" "}
-                        runs from this over
+                        <div className={styles.overSummary}>
+                          {balls.reduce((sum, b) => sum + (b.runs || 0) + (b.extras?.runs || 0), 0)}{" "}
+                          runs from this over
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             );

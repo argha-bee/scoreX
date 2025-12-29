@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
@@ -31,11 +30,12 @@ export default function ScoreUpdatePage() {
         setMatch(matchData);
         setAllPlayers(res.data.allPlayers || []);
 
-        // Set current score
-        const currentScore = matchData.scores[matchData.currentInnings - 1];
+        // Determine current score object based on innings index
+        const currentInningsIndex = matchData.currentInnings - 1;
+        const currentScore = matchData.scores[currentInningsIndex];
         setScore(currentScore);
 
-        // Set previous innings if exists
+        // Set previous innings if we are in the 2nd innings
         const previous = matchData.currentInnings === 2 ? matchData.scores[0] : null;
         setPrevInnings(previous);
       }
@@ -62,21 +62,20 @@ export default function ScoreUpdatePage() {
   const isControlDisabled = score.isCompleted || match.state === "finished";
 
   // Calculations
-  const crr = (score.runs / ((score.overs * 6 + score.balls) / 6) || 0).toFixed(2);
+  const crr = (score.runs / ((score.overs * 6 + score.balls) / 6 || 1)).toFixed(2);
   const target = prevInnings ? prevInnings.runs + 1 : null;
   const totalBalls = (match?.overs || 0) * 6;
   const ballsDone = (score?.overs || 0) * 6 + (score?.balls || 0);
-  const ballsLeft = totalBalls - ballsDone;
+  const ballsLeft = Math.max(0, totalBalls - ballsDone);
   const rrr = target && ballsLeft > 0 ? (((target - score.runs) / ballsLeft) * 6).toFixed(2) : null;
 
-  // Get batting team name
-  const battingTeamId = score.battingTeam?._id || score.battingTeam;
-  const battingTeam = match.teams.find(
-    (t) => (t._id || t).toString() === battingTeamId?.toString()
-  );
+  // Get batting team name safely
+  const battingTeamId = (score.battingTeam?._id || score.battingTeam)?.toString();
+  const battingTeam = match.teams.find((t) => (t._id || t).toString() === battingTeamId);
   const battingTeamName = battingTeam?.shortName || "Team";
 
-  // Handle ball action
+  // --- ACTIONS ---
+
   const handleAction = async (type, value = 0) => {
     if (isProcessing || isControlDisabled) return;
 
@@ -85,13 +84,11 @@ export default function ScoreUpdatePage() {
       return Swal.fire("Error", "Select Striker and Bowler first!", "error");
     }
 
-    // For wickets, show modal for details
     if (type === "wicket") {
       setModalMode("wicket");
       return;
     }
 
-    // For extras with runs, show input
     if (type === "extra" && (value === "WD" || value === "NB")) {
       setModalMode("extraRuns");
       setExtraType(value);
@@ -115,7 +112,7 @@ export default function ScoreUpdatePage() {
           if (match.currentInnings === 1) {
             Swal.fire({
               title: "Innings Complete!",
-              text: "First innings finished!",
+              text: `Target set: ${score.runs + value + 1}`,
               icon: "success",
               confirmButtonText: "OK",
             });
@@ -134,14 +131,12 @@ export default function ScoreUpdatePage() {
         }
       }
     } catch (err) {
-      console.error("Action error:", err);
       Swal.fire("Error", err.response?.data?.error || "Action failed", "error");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Handle extra with runs
   const handleExtraWithRuns = async () => {
     setIsProcessing(true);
     try {
@@ -158,11 +153,7 @@ export default function ScoreUpdatePage() {
         await fetchData();
 
         if (res.data.inningsFinished) {
-          if (match.currentInnings === 1) {
-            Swal.fire("Innings Complete", "First innings finished!", "success");
-          } else {
-            Swal.fire("Match Finished!", match.winningMargin || "", "success");
-          }
+          Swal.fire("Innings Finished", "Innings completed via extra runs", "success");
         } else if (res.data.overEnded) {
           setModalMode("bowler");
         }
@@ -174,7 +165,6 @@ export default function ScoreUpdatePage() {
     }
   };
 
-  // Handle wicket confirmation
   const handleWicketConfirm = async () => {
     setIsProcessing(true);
     try {
@@ -184,7 +174,7 @@ export default function ScoreUpdatePage() {
         extraRuns: 0,
         isWicket: true,
         wicketType: wicketDetails.type,
-        fielderId: wicketDetails.fielderId,
+        fielderId: wicketDetails.fielderId || null,
       });
 
       if (res.data.success) {
@@ -193,13 +183,9 @@ export default function ScoreUpdatePage() {
         await fetchData();
 
         if (res.data.inningsFinished) {
-          if (match.currentInnings === 1) {
-            Swal.fire("Innings Complete", "All wickets down!", "success");
-          } else {
-            Swal.fire("Match Finished!", match.winningMargin || "", "success");
-          }
+          Swal.fire("Innings Complete", "All wickets down!", "success");
         } else {
-          // Need new batsman
+          // Only prompt for striker if innings isn't over
           setModalMode("striker");
         }
       }
@@ -210,7 +196,6 @@ export default function ScoreUpdatePage() {
     }
   };
 
-  // Select player (batsman or bowler)
   const selectPlayer = async (playerId, mode) => {
     const endpoint = mode === "bowler" ? "change-bowler" : "add-batsman";
     try {
@@ -228,56 +213,60 @@ export default function ScoreUpdatePage() {
     }
   };
 
-  // Filter players based on modal mode and innings
-  const getFilteredPlayers = () => {
-    if (!modalMode || modalMode === "wicket" || modalMode === "extraRuns") return [];
-
-    const targetTeamId =
-      modalMode === "bowler"
-        ? score.bowlingTeam?._id || score.bowlingTeam
-        : score.battingTeam?._id || score.battingTeam;
-
-    return allPlayers.filter((p) => {
-      const playerTeamId = p.team?._id || p.team;
-      const matchesTeam = playerTeamId?.toString() === targetTeamId?.toString();
-
-      if (!matchesTeam) return false;
-
-      if (modalMode === "bowler") {
-        const isWK = p.role?.toLowerCase().includes("keeper");
-        return !isWK;
-      } else {
-        const isAlreadyOut = p.battingStats?.isOut;
-        const isCurrentlyBatting = score.currentBatsmen?.some(
-          (b) => b.player?._id?.toString() === p._id.toString()
-        );
-        return !isAlreadyOut && !isCurrentlyBatting;
-      }
-    });
-  };
-
-  // Handle start 2nd innings
   const handleStartSecondInnings = async () => {
     try {
       const res = await axios.post(`/api/match/${id}/next-innings`);
       if (res.data.success) {
         Swal.fire("Success", "Second innings started!", "success");
-        await fetchData();
+        await fetchData(); // This will refresh state and pull the NEW score object
       }
     } catch (err) {
       Swal.fire("Error", "Failed to start 2nd innings", "error");
     }
   };
 
-  // Get current bowler from bowlersPerformance
+  // --- FILTER LOGIC ---
+  const getFilteredPlayers = () => {
+    if (!modalMode || ["wicket", "extraRuns"].includes(modalMode)) return [];
+
+    // 1. Get the raw ID from the CURRENT score object
+    // If we are in 2nd innings, 'score' is the 2nd innings object, so 'battingTeam' should be Team B
+    const targetTeamId =
+      modalMode === "bowler"
+        ? (score.bowlingTeam?._id || score.bowlingTeam)?.toString()
+        : (score.battingTeam?._id || score.battingTeam)?.toString();
+
+    return allPlayers.filter((p) => {
+      const playerTeamId = (p.team?._id || p.team)?.toString();
+
+      // Strict Team Check: If player doesn't belong to the needed team, hide them.
+      if (playerTeamId !== targetTeamId) return false;
+
+      if (modalMode === "bowler") {
+        return !p.role?.toLowerCase().includes("keeper");
+      } else {
+        // Batsman logic:
+        // Hide if currently on the field in THIS innings
+        const isCurrentlyBatting = score.currentBatsmen?.some(
+          (b) => (b.player?._id || b.player)?.toString() === p._id.toString()
+        );
+
+        // Hide if already out in THIS innings
+        // Note: We check 'score.batsmenPerformance' (this innings stats) not 'p.battingStats' (which might be stale)
+        const thisInningsStats = score.batsmenPerformance?.find(
+          (bp) => (bp.player?._id || bp.player)?.toString() === p._id.toString()
+        );
+        const isAlreadyOut = thisInningsStats?.isOut;
+
+        return !isCurrentlyBatting && !isAlreadyOut;
+      }
+    });
+  };
+
+  // Helper for UI
   const currentBowler = score.bowlersPerformance?.find(
     (b) => b.player?.toString() === score.currentBowler?._id?.toString()
   );
-
-  const currentBowlerName = score.currentBowler?.name || "No Bowler";
-  const currentBowlerEcon = currentBowler
-    ? (currentBowler.runs / ((currentBowler.overs * 6 + currentBowler.balls) / 6) || 0).toFixed(2)
-    : "0.00";
 
   return (
     <div className={styles.container}>
@@ -309,24 +298,18 @@ export default function ScoreUpdatePage() {
         </div>
       </div>
 
-      {/* Bowler Status & Ball Timeline */}
+      {/* Bowler Status & Ball Timeline (Restored Style) */}
       <div className={styles.bowlerStatusCard}>
         <div className={styles.bowlerFlex}>
           <div className={styles.bowlerIdentity}>
             <strong>Timeline</strong>
-            {/* <strong>{currentBowlerName}</strong> */}
-            {/* <small>Economy: {currentBowlerEcon}</small> */}
           </div>
-          {/* <div className={styles.bowlerMatchStats}>
-            {currentBowler?.overs || 0}.{currentBowler?.balls || 0} - {currentBowler?.runs || 0} -{" "}
-            {currentBowler?.wickets || 0}
-          </div> */}
         </div>
         <div className={styles.ballTimeline}>
           {score.scoreEveryBall?.slice(-15).map((ball, i) => {
-            const isWicket = ball === "W" || ball.includes("W");
-            const isFour = ball === "4";
-            const isSix = ball === "6";
+            const isWicket = ball.toString().includes("W");
+            const isFour = ball === "4" || ball === 4;
+            const isSix = ball === "6" || ball === 6;
 
             return (
               <span
@@ -520,9 +503,11 @@ export default function ScoreUpdatePage() {
                   <option value="">Select Fielder</option>
                   {allPlayers
                     .filter((p) => {
-                      const bowlingTeamId = score.bowlingTeam?._id || score.bowlingTeam;
-                      const playerTeamId = p.team?._id || p.team;
-                      return playerTeamId?.toString() === bowlingTeamId?.toString();
+                      const bowlingTeamId = (
+                        score.bowlingTeam?._id || score.bowlingTeam
+                      )?.toString();
+                      const playerTeamId = (p.team?._id || p.team)?.toString();
+                      return playerTeamId === bowlingTeamId;
                     })
                     .map((p) => (
                       <option key={p._id} value={p._id}>

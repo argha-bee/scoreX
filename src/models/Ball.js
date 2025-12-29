@@ -44,7 +44,7 @@ const BallSchema = new mongoose.Schema(
     extras: {
       type: {
         type: String,
-        enum: ["", "wide", "no-ball", "bye", "leg-bye"],
+        enum: ["", "WD", "NB", "B", "LB"],
         default: "",
       },
       runs: {
