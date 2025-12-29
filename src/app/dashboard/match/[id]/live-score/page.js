@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
@@ -327,7 +326,6 @@ export default function LiveScorePage() {
         </div>
       )}
 
-      {/* Previous Innings */}
       {prevInnings && (
         <div className={styles.previousInnings}>
           <div className={styles.divider}>

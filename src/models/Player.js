@@ -91,13 +91,11 @@ const PlayerSchema = new mongoose.Schema(
   }
 );
 
-// 🔥 UNIQUE constraint
 PlayerSchema.index(
   { name: 1, jerseyNumber: 1, team: 1 },
   { unique: true }
 );
 
-// Calculate strike rate
 PlayerSchema.methods.calculateStrikeRate = function () {
   if (this.battingStats.balls > 0) {
     this.battingStats.strikeRate = (
@@ -107,7 +105,6 @@ PlayerSchema.methods.calculateStrikeRate = function () {
   }
 };
 
-// Calculate economy rate
 PlayerSchema.methods.calculateEconomy = function () {
   if (this.bowlingStats.overs > 0) {
     this.bowlingStats.economy = (this.bowlingStats.runs / this.bowlingStats.overs).toFixed(2);

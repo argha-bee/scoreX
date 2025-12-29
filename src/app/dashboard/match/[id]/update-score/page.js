@@ -30,12 +30,9 @@ export default function ScoreUpdatePage() {
         setMatch(matchData);
         setAllPlayers(res.data.allPlayers || []);
 
-        // Determine current score object based on innings index
-        const currentInningsIndex = matchData.currentInnings - 1;
         const currentScore = matchData.scores[currentInningsIndex];
         setScore(currentScore);
 
-        // Set previous innings if we are in the 2nd innings
         const previous = matchData.currentInnings === 2 ? matchData.scores[0] : null;
         setPrevInnings(previous);
       }
@@ -58,10 +55,8 @@ export default function ScoreUpdatePage() {
     return <div className={styles.center}>Score data not available</div>;
   }
 
-  // Check if match/innings is finished
   const isControlDisabled = score.isCompleted || match.state === "finished";
 
-  // Calculations
   const crr = (score.runs / ((score.overs * 6 + score.balls) / 6 || 1)).toFixed(2);
   const target = prevInnings ? prevInnings.runs + 1 : null;
   const totalBalls = (match?.overs || 0) * 6;
@@ -69,12 +64,9 @@ export default function ScoreUpdatePage() {
   const ballsLeft = Math.max(0, totalBalls - ballsDone);
   const rrr = target && ballsLeft > 0 ? (((target - score.runs) / ballsLeft) * 6).toFixed(2) : null;
 
-  // Get batting team name safely
   const battingTeamId = (score.battingTeam?._id || score.battingTeam)?.toString();
   const battingTeam = match.teams.find((t) => (t._id || t).toString() === battingTeamId);
   const battingTeamName = battingTeam?.shortName || "Team";
-
-  // --- ACTIONS ---
 
   const handleAction = async (type, value = 0) => {
     if (isProcessing || isControlDisabled) return;
@@ -185,7 +177,6 @@ export default function ScoreUpdatePage() {
         if (res.data.inningsFinished) {
           Swal.fire("Innings Complete", "All wickets down!", "success");
         } else {
-          // Only prompt for striker if innings isn't over
           setModalMode("striker");
         }
       }
@@ -218,19 +209,16 @@ export default function ScoreUpdatePage() {
       const res = await axios.post(`/api/match/${id}/next-innings`);
       if (res.data.success) {
         Swal.fire("Success", "Second innings started!", "success");
-        await fetchData(); // This will refresh state and pull the NEW score object
+        await fetchData();
       }
     } catch (err) {
       Swal.fire("Error", "Failed to start 2nd innings", "error");
     }
   };
 
-  // --- FILTER LOGIC ---
   const getFilteredPlayers = () => {
     if (!modalMode || ["wicket", "extraRuns"].includes(modalMode)) return [];
 
-    // 1. Get the raw ID from the CURRENT score object
-    // If we are in 2nd innings, 'score' is the 2nd innings object, so 'battingTeam' should be Team B
     const targetTeamId =
       modalMode === "bowler"
         ? (score.bowlingTeam?._id || score.bowlingTeam)?.toString()
@@ -239,20 +227,15 @@ export default function ScoreUpdatePage() {
     return allPlayers.filter((p) => {
       const playerTeamId = (p.team?._id || p.team)?.toString();
 
-      // Strict Team Check: If player doesn't belong to the needed team, hide them.
       if (playerTeamId !== targetTeamId) return false;
 
       if (modalMode === "bowler") {
-        return !p.role?.toLowerCase().includes("keeper");
+        return !p.role?.toLowerCase().includes("keeper") && (p.player?._id || p.player)?.toString() !== currentBowler;
       } else {
-        // Batsman logic:
-        // Hide if currently on the field in THIS innings
         const isCurrentlyBatting = score.currentBatsmen?.some(
           (b) => (b.player?._id || b.player)?.toString() === p._id.toString()
         );
 
-        // Hide if already out in THIS innings
-        // Note: We check 'score.batsmenPerformance' (this innings stats) not 'p.battingStats' (which might be stale)
         const thisInningsStats = score.batsmenPerformance?.find(
           (bp) => (bp.player?._id || bp.player)?.toString() === p._id.toString()
         );
@@ -263,14 +246,12 @@ export default function ScoreUpdatePage() {
     });
   };
 
-  // Helper for UI
   const currentBowler = score.bowlersPerformance?.find(
     (b) => b.player?.toString() === score.currentBowler?._id?.toString()
   );
 
   return (
     <div className={styles.container}>
-      {/* Big Scoreboard */}
       <div className={styles.headerCard}>
         <div className={styles.inningsLabel}>
           {match.currentInnings === 1 ? "FIRST INNINGS" : "SECOND INNINGS"}
@@ -298,7 +279,6 @@ export default function ScoreUpdatePage() {
         </div>
       </div>
 
-      {/* Bowler Status & Ball Timeline (Restored Style) */}
       <div className={styles.bowlerStatusCard}>
         <div className={styles.bowlerFlex}>
           <div className={styles.bowlerIdentity}>
@@ -331,7 +311,6 @@ export default function ScoreUpdatePage() {
         </div>
       </div>
 
-      {/* Setup Controls */}
       {!isControlDisabled && (
         <div className={styles.setupBar}>
           <button onClick={() => setModalMode("striker")} className={styles.setupBtn}>
@@ -346,7 +325,6 @@ export default function ScoreUpdatePage() {
         </div>
       )}
 
-      {/* Live Batting */}
       <ScorecardTable
         title="LIVE BATTING"
         data={score.currentBatsmen}
@@ -354,7 +332,6 @@ export default function ScoreUpdatePage() {
         activeId={score.currentBatsmen?.find((b) => b.onStrike)?.player?._id}
       />
 
-      {/* Live Bowling */}
       <ScorecardTable
         title="LIVE BOWLING"
         data={score.bowlersPerformance}
@@ -362,7 +339,6 @@ export default function ScoreUpdatePage() {
         activeId={score.currentBowler?._id}
       />
 
-      {/* Control Panel */}
       {!isControlDisabled && (
         <div className={styles.controlPanel}>
           <div className={styles.buttonGrid}>
@@ -401,7 +377,6 @@ export default function ScoreUpdatePage() {
         </div>
       )}
 
-      {/* Post-game Actions */}
       {isControlDisabled && (
         <div className={styles.postGameActions}>
           {match.currentInnings === 1 && match.state !== "finished" ? (
@@ -419,7 +394,6 @@ export default function ScoreUpdatePage() {
         </div>
       )}
 
-      {/* Previous Innings Summary */}
       {prevInnings && (
         <div className={styles.historySection}>
           <div className={styles.divider}>COMPLETED: FIRST INNINGS</div>
@@ -434,7 +408,6 @@ export default function ScoreUpdatePage() {
         </div>
       )}
 
-      {/* Player Selection Modal */}
       {modalMode && !["wicket", "extraRuns"].includes(modalMode) && (
         <PlayerSelectionModal
           title={`Select ${modalMode}`}
@@ -444,7 +417,6 @@ export default function ScoreUpdatePage() {
         />
       )}
 
-      {/* Extra Runs Modal */}
       {modalMode === "extraRuns" && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -471,7 +443,6 @@ export default function ScoreUpdatePage() {
         </div>
       )}
 
-      {/* Wicket Details Modal */}
       {modalMode === "wicket" && (
         <div className={styles.overlay}>
           <div className={styles.modal}>

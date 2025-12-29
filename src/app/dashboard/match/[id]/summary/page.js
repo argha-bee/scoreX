@@ -35,7 +35,6 @@ export default function MatchSummaryPage() {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
         <button onClick={() => router.back()} className={styles.backBtn}>
           ← Back
@@ -48,7 +47,6 @@ export default function MatchSummaryPage() {
         </div>
       </div>
 
-      {/* Match Result */}
       <div className={styles.resultCard}>
         {match.state === "finished" ? (
           <>
@@ -66,7 +64,6 @@ export default function MatchSummaryPage() {
         )}
       </div>
 
-      {/* Tabs */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${activeTab === "scorecard" ? styles.activeTab : ""}`}
@@ -82,7 +79,6 @@ export default function MatchSummaryPage() {
         </button>
       </div>
 
-      {/* Scorecard Tab */}
       {activeTab === "scorecard" && (
         <div className={styles.scorecardSection}>
           {innings.map((inning, idx) => {
@@ -128,7 +124,6 @@ export default function MatchSummaryPage() {
         </div>
       )}
 
-      {/* Timeline Tab */}
       {activeTab === "timeline" && (
         <div className={styles.timelineSection}>
           {innings.map((inning, inningIdx) => {
